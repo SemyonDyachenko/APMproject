@@ -9,15 +9,25 @@ class WeightClass(models.Model):
     def str(self):
         return self.name
 
+
+class League(models.Model):
+    name = models.CharField(max_length=100, unique=True,null=False)
+    country = models.CharField(max_length=100,null=False)
+    description = models.TextField()
+    president = models.CharField(max_length=100,null=False)
+    level = models.CharField(max_length=50,null=False)
+
+    def __str__(self):
+        return f'{self.name} , President: {self.president}'
+
 class Tournament(models.Model):
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
     date = models.DateField()
+    league = models.ForeignKey(League, on_delete=models.CASCADE, default='')
 
     def str(self):
-        return self.name
-
-
+        return f'{self.name} , {self.location}'
 
 class CompetitorManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -61,3 +71,5 @@ class Match(models.Model):
 
     def str(self):
         return f'{self.winner} vs. {self.loser}'
+
+

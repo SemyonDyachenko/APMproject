@@ -4,4 +4,4 @@ from .models import Competitor
 class CompetitorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competitor
-        fields = ['id','first_name','last_name','gender','elo_rating']
+        fields = ['id', 'first_name', 'last_name', 'gender', 'elo_rating']
