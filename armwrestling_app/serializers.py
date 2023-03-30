@@ -6,6 +6,12 @@ class CompetitorSerializer(serializers.ModelSerializer):
         model = Competitor
         fields = ['id', 'first_name', 'last_name', 'gender', 'elo_rating']
 
+class ProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Competitor
+        fields = '__all__'
+
 class LeagueSerializer(serializers.ModelSerializer):
 
     class Meta:

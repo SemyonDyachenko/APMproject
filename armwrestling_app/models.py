@@ -52,7 +52,7 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=1)
     #weight_class = models.ForeignKey('WeightClass', on_delete=models.CASCADE, related_name='WeightClasses',blank=True)
     elo_rating = models.IntegerField(default=1000)
-
+    country = models.CharField(max_length=50,default="Russia")
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
