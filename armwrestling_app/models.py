@@ -21,15 +21,6 @@ class League(models.Model):
     def __str__(self):
         return f'{self.name} , President: {self.president}'
 
-class Tournament(models.Model):
-    name = models.CharField(max_length=255)
-    location = models.CharField(max_length=255)
-    date = models.DateField()
-    league = models.ForeignKey(League, on_delete=models.CASCADE, default='')
-
-    def __str__(self):
-        return f"{self.name}"
-
 class CompetitorManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -50,11 +41,13 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=30)
     email = models.EmailField(unique=True)
     gender = models.CharField(max_length=1)
-    #weight_class = models.ForeignKey('WeightClass', on_delete=models.CASCADE, related_name='WeightClasses',blank=True)
+    # weight_class = models.ForeignKey('WeightClass', on_delete=models.CASCADE, related_name='WeightClasses',blank=True)
     elo_rating = models.IntegerField(default=1000)
     country = models.CharField(max_length=50,default="Russia")
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    kFactor = models.IntegerField(default=30, blank=True)
+    mode = models.CharField(max_length=20,default="competitor", blank=True)
 
     objects = CompetitorManager()
 
@@ -63,6 +56,36 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
 
     def str(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class Tournament(models.Model):
+    name = models.CharField(max_length=255)
+    location = models.CharField(max_length=255)
+    date = models.DateField()
+    league = models.ForeignKey(League, on_delete=models.CASCADE, default='')
+    organizer = models.ForeignKey(Competitor, on_delete=models.CASCADE, default='')
+    description = models.TextField(default='', blank=True)
+    photo = models.ImageField(upload_to='tournaments_banners',blank=True)
+    avg_rating = models.IntegerField(default='0')
+    address = models.CharField(max_length=100,default='')
+
+    main_secretary = models.ForeignKey(
+        Competitor,
+        on_delete=models.CASCADE,
+        related_name='tournaments_main_secretary',
+        default=''
+    )
+    main_referee = models.ForeignKey(
+        Competitor,
+        on_delete=models.CASCADE,
+        related_name='tournaments_main_referee',
+        default=''
+    )
+
+
+    def __str__(self):
+        return f"{self.name}"
+
 
 class Match(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)

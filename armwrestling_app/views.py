@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import *
 from rest_framework import status
-
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class CompetitorViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.all().order_by('-elo_rating')
@@ -43,6 +43,7 @@ class MatchViewSet(viewsets.ModelViewSet):
 
 
 class TournamentViewSet(viewsets.ModelViewSet):
+    parser_classes = [MultiPartParser, FormParser]
     queryset = Tournament.objects.all()
     serializer_class = TournamentSerializer
 
