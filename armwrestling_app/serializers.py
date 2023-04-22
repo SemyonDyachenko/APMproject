@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Competitor, League, Match, Tournament, WeightClass
+from .models import *
 from django.contrib.auth.hashers import make_password
 
 
@@ -10,7 +10,7 @@ class CompetitorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Competitor
-        fields = ['id', 'email', 'mode', 'first_name', 'last_name', 'gender', 'elo_rating', 'password', 'kFactor']
+        fields = ['id', 'email', 'mode', 'first_name', 'last_name', 'gender', 'elo_rating', 'password', 'kFactor','weight']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -48,3 +48,16 @@ class WeightClassSerializer(serializers.ModelSerializer):
     class Meta:
         model = WeightClass
         fields = '__all__'
+
+
+class TournamentWeightClassesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TournamentWeightClasses
+        fields = ['id', 'tournament', 'weight_class']
+
+class TournamentRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TournamentRegistration
+        fields = '__all__'
+        read_only_fields = ['id']
+

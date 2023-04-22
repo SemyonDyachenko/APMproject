@@ -14,7 +14,10 @@ router.register(r'matches', MatchViewSet,basename='match')
 router.register(r'matcheslist', MatchListViewSet,basename='matchlist')
 router.register(r'updaterating', RatingViewSet,basename='rating')
 router.register(r'tournaments', TournamentViewSet,basename='tournament')
-router.register(r'weights',WeightClassViewSet, basename='weightclass')
+router.register(r'weightclasses',WeightClassViewSet, basename='weightclass')
+router.register(r'tournament_registration',TournamentRegistrationViewSet,basename='tournamentregistration')
+router.register(r'add_weight_class',TournamentWeightClassesViewSet,basename='tournamentweightclass' )
+router.register(r'startTournament',TournamentProtocolViewSet, basename='starttournament')
 
 urlpatterns = [
     path('', include(router.urls)),

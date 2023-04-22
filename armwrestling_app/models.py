@@ -4,8 +4,7 @@ import datetime
 
 class WeightClass(models.Model):
     name = models.CharField(max_length=255)
-    upper_weight_limit = models.FloatField()
-    lower_weight_limit = models.FloatField()
+
 
     def __str__(self):
         return self.name
@@ -48,6 +47,7 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     kFactor = models.IntegerField(default=30, blank=True)
     mode = models.CharField(max_length=20,default="competitor", blank=True)
+    weight = models.IntegerField(default=0)
 
     objects = CompetitorManager()
 
@@ -68,6 +68,9 @@ class Tournament(models.Model):
     photo = models.ImageField(upload_to='tournaments_banners',blank=True)
     avg_rating = models.IntegerField(default='0')
     address = models.CharField(max_length=100,default='')
+    is_started = models.BooleanField(default=False)
+
+
 
     main_secretary = models.ForeignKey(
         Competitor,
@@ -102,3 +105,21 @@ class Match(models.Model):
         return f'{self.first_competitor} vs. {self.second_competitor}'
 
 
+class TournamentRegistration(models.Model):
+    competitor = models.ForeignKey(Competitor, on_delete=models.CASCADE)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    weight_class = models.ForeignKey(WeightClass, on_delete=models.CASCADE,default='')
+    registration_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (('competitor', 'tournament'),)
+        verbose_name_plural = 'Tournament registrations'
+
+    def __str__(self):
+        return f'{self.competitor} - {self.tournament} - {self.registration_date}'
+
+
+class TournamentWeightClasses(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    weight_class = models.ForeignKey(WeightClass, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
