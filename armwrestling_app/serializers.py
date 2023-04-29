@@ -10,7 +10,7 @@ class CompetitorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Competitor
-        fields = ['id', 'email', 'mode', 'first_name', 'last_name', 'gender', 'elo_rating', 'password', 'kFactor','weight']
+        fields = ['id', 'email', 'mode', 'first_name', 'last_name', 'gender', 'country', 'elo_rating', 'password', 'kFactor','weight']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
