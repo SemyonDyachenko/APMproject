@@ -10,15 +10,7 @@ class WeightClass(models.Model):
         return self.name
 
 
-class League(models.Model):
-    name = models.CharField(max_length=100, unique=True,null=False)
-    country = models.CharField(max_length=100,null=False)
-    description = models.TextField()
-    president = models.CharField(max_length=100,null=False)
-    level = models.CharField(max_length=50,null=False)
 
-    def __str__(self):
-        return f'{self.name} , President: {self.president}'
 
 class CompetitorManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -48,7 +40,7 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     kFactor = models.IntegerField(default=30, blank=True)
     mode = models.CharField(max_length=20,default="competitor", blank=True)
     weight = models.IntegerField(default=0)
-
+    image = models.ImageField(upload_to='competitors_userpictures',blank=True)
     objects = CompetitorManager()
 
     USERNAME_FIELD = 'email'
@@ -57,6 +49,16 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     def str(self):
         return f"{self.first_name} {self.last_name}"
 
+
+class League(models.Model):
+    name = models.CharField(max_length=100, unique=True,null=False)
+    country = models.CharField(max_length=100,null=False)
+    description = models.TextField()
+    president = models.ForeignKey(Competitor, on_delete=models.CASCADE, default='')
+    level = models.CharField(max_length=50,null=False)
+
+    def __str__(self):
+        return f'{self.name} , President: {self.president}'
 
 class Tournament(models.Model):
     name = models.CharField(max_length=255)
