@@ -8,9 +8,58 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from .models import TournamentRegistration
 from django.db.models import Q
 
+
+
+
+
+
 class CompetitorViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.all().order_by('-elo_rating')
     serializer_class = CompetitorSerializer
+
+
+class ProfileImageViewSet(viewsets.ModelViewSet):
+    serializer_class = ProfileSerializer
+    queryset = Competitor.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        competitor_id = request.data.get('id',None)
+        image = request.data.get('image',None)
+
+        if competitor_id is not None and image is not None:
+            try: 
+                competitor = Competitor.objects.get(id=competitor_id)
+                competitor.image = image
+                competitor.save()
+                serializer = CompetitorSerializer(competitor)
+                return Response(serializer.data)
+            except Competitor.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class ProfileUpdateViewSet(viewsets.ModelViewSet):
+    serializer_class = ProfileSerializer
+    queryset = Competitor.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        competitor_id = request.data.get('id',None)
+        firstname = request.data.get('firstname',None)
+        lastname = request.data.get('lastname',None)
+        country= request.data.get('country',None)
+        if competitor_id is not None and firstname is not None and lastname is not None and country is not None:
+            try:
+                competitor = Competitor.objects.get(id=competitor_id)
+                competitor.country = country
+                competitor.last_name = lastname
+                competitor.first_name = firstname
+                competitor.save()
+                serializer = CompetitorSerializer(competitor)
+                return Response(serializer.data)
+            except Competitor.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProfileViewSet(viewsets.ModelViewSet):

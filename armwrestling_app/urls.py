@@ -18,7 +18,8 @@ router.register(r'weightclasses',WeightClassViewSet, basename='weightclass')
 router.register(r'tournament_registration',TournamentRegistrationViewSet,basename='tournamentregistration')
 router.register(r'add_weight_class',TournamentWeightClassesViewSet,basename='tournamentweightclass' )
 router.register(r'startTournament',TournamentProtocolViewSet, basename='starttournament')
-
+router.register(r'updateProfile',ProfileUpdateViewSet,basename='updateprofile')
+router.register(r'updateProfileImage',ProfileImageViewSet,basename='updateprofileimage')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

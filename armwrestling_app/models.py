@@ -10,8 +10,6 @@ class WeightClass(models.Model):
         return self.name
 
 
-
-
 class CompetitorManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -40,7 +38,9 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     kFactor = models.IntegerField(default=30, blank=True)
     mode = models.CharField(max_length=20,default="competitor", blank=True)
     weight = models.IntegerField(default=0)
-    image = models.ImageField(upload_to='competitors_userpictures',blank=True)
+    image = models.ImageField(upload_to='media/competitors_userpictures',blank=True)
+    rank = models.CharField(default='',blank=True,max_length=12)
+    phone = models.CharField(default='',blank=True,max_length=14)
     objects = CompetitorManager()
 
     USERNAME_FIELD = 'email'
@@ -56,6 +56,7 @@ class League(models.Model):
     description = models.TextField()
     president = models.ForeignKey(Competitor, on_delete=models.CASCADE, default='')
     level = models.CharField(max_length=50,null=False)
+    average_rating = models.IntegerField(blank=True,default=0)
 
     def __str__(self):
         return f'{self.name} , President: {self.president}'
@@ -67,7 +68,7 @@ class Tournament(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE, default='')
     organizer = models.ForeignKey(Competitor, on_delete=models.CASCADE, default='')
     description = models.TextField(default='', blank=True)
-    photo = models.ImageField(upload_to='tournaments_banners',blank=True)
+    photo = models.ImageField(upload_to='media/tournaments_banners',blank=True)
     avg_rating = models.IntegerField(default='0')
     address = models.CharField(max_length=100,default='')
     is_started = models.BooleanField(default=False)
