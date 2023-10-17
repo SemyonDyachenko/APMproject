@@ -38,9 +38,15 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     kFactor = models.IntegerField(default=30, blank=True)
     mode = models.CharField(max_length=20,default="competitor", blank=True)
     weight = models.IntegerField(default=0)
+    height = models.IntegerField(default=0)
+    trainer = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    city = models.CharField(default='',blank=True,max_length=50)
+    description = models.TextField(default=0,blank=True)
+    career_start_date = models.DateField(null=True,blank=True)
     image = models.ImageField(upload_to='media/competitors_userpictures',blank=True)
     rank = models.CharField(default='',blank=True,max_length=12)
     phone = models.CharField(default='',blank=True,max_length=14)
+    birthdate = models.DateField(null=True,blank=True)
     objects = CompetitorManager()
 
     USERNAME_FIELD = 'email'
