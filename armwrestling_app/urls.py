@@ -19,6 +19,7 @@ router.register(r'tournament_registration',TournamentRegistrationViewSet,basenam
 router.register(r'add_weight_class',TournamentWeightClassesViewSet,basename='tournamentweightclass' )
 router.register(r'startTournament',TournamentProtocolViewSet, basename='starttournament')
 router.register(r'updateProfile',ProfileUpdateViewSet,basename='updateprofile')
+router.register(r'updateProfileProps',PropsUpdateViewSet,basename='updateprops')
 router.register(r'updateProfileImage',ProfileImageViewSet,basename='updateprofileimage')
 urlpatterns = [
     path('', include(router.urls)),

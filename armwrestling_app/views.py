@@ -9,14 +9,41 @@ from .models import TournamentRegistration
 from django.db.models import Q
 
 
-
-
-
-
 class CompetitorViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.all().order_by('-elo_rating')
     serializer_class = CompetitorSerializer
 
+
+class PropsUpdateViewSet(viewsets.ModelViewSet):
+    queryset = Competitor.objects.all()
+    serializer_class = ProfileSerializer
+
+    def update(self, request, *args, **kwargs):
+        competitor_id = request.data.get('id',None)
+        trainer = request.data.get('trainer',None)
+        birthdate = request.data.get('birthdate',None)
+        height = request.data.get('height',None)
+        city =  request.data.get('city',None)
+        weight =  request.data.get('weight',None)
+        career_start_date = request.data.get('career_start_date',None)
+        description = request.data.get('description',None)
+        if competitor_id is not None:
+            try:
+                competitor = Competitor.objects.get(id=competitor_id)
+                competitor.trainer = Competitor.objects.get(id=trainer)
+                competitor.birthdate = birthdate
+                competitor.height = height
+                competitor.weight = weight
+                competitor.description = description
+                competitor.career_start_date = career_start_date
+                competitor.city = city
+                competitor.save()
+                serializer = CompetitorSerializer(competitor)
+                return Response(serializer.data)
+            except Competitor.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class ProfileImageViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
