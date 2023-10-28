@@ -63,6 +63,9 @@ class League(models.Model):
     president = models.ForeignKey(Competitor, on_delete=models.CASCADE, default='')
     level = models.CharField(max_length=50,null=False)
     average_rating = models.IntegerField(blank=True,default=0)
+    creation_date = models.DateField(blank=True,null=True)
+    phone=models.CharField(blank=True,default='',max_length=15)
+    email = models.CharField(blank=True,default='',max_length=99)
 
     def __str__(self):
         return f'{self.name} , President: {self.president}'
@@ -78,7 +81,8 @@ class Tournament(models.Model):
     avg_rating = models.IntegerField(default='0')
     address = models.CharField(max_length=100,default='')
     is_started = models.BooleanField(default=False)
-
+    phone = models.CharField(blank=True,default="",max_length=25)
+    level = models.CharField(blank=True,default="",max_length=15)
 
 
     main_secretary = models.ForeignKey(

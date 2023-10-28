@@ -9,6 +9,7 @@ from .models import TournamentRegistration
 from django.db.models import Q
 
 
+
 class CompetitorViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.all().order_by('-elo_rating')
     serializer_class = CompetitorSerializer
@@ -126,9 +127,17 @@ class MatchViewSet(viewsets.ModelViewSet):
 
 class TournamentViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
-    queryset = Tournament.objects.all()
     serializer_class = TournamentSerializer
 
+    def get_queryset(self):
+        queryset = Tournament.objects.all()
+        league = self.request.query_params.get('league', None)
+            
+        if league is not None:
+            queryset = queryset.filter(league=league)
+            
+        return queryset
+    
 
 class WeightClassViewSet(viewsets.ModelViewSet):
     queryset = WeightClass.objects.all()
@@ -137,6 +146,7 @@ class WeightClassViewSet(viewsets.ModelViewSet):
 class TournamentProtocolViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
     queryset = Tournament.objects.all()
+
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -154,6 +164,14 @@ class TournamentProtocolViewSet(viewsets.ModelViewSet):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+
+class TournamentCompetitors(viewsets.ReadOnlyModelViewSet):
+   serializer_class = CompetitorSerializer
+
+   def get_queryset(self):
+    tournament_id = self.request.query_params.get('tournamentId',None)
+    return Competitor.objects.filter(tournamentregistration__tournament_id=tournament_id)
+   
 class TournamentRegistrationViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentRegistrationSerializer
     queryset = TournamentRegistration.objects.all()
