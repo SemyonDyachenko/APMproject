@@ -123,7 +123,7 @@ class TournamentRegistration(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(WeightClass, on_delete=models.CASCADE,default='')
     registration_date = models.DateTimeField(auto_now_add=True)
-
+    category = models.CharField(max_length=50,blank=True,default="")
     class Meta:
         unique_together = (('competitor', 'tournament'),)
         verbose_name_plural = 'Tournament registrations'

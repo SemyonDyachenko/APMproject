@@ -165,6 +165,14 @@ class TournamentProtocolViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class TournamentsByCompetitorViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TournamentSerializer  # Здесь используйте ваш сериализатор для модели Tournament
+
+    def get_queryset(self):
+        competitor_id = self.request.query_params.get('competitorId',None)
+        return Tournament.objects.filter(tournamentregistration__competitor_id=competitor_id)
+    
+
 class TournamentCompetitors(viewsets.ReadOnlyModelViewSet):
    serializer_class = CompetitorSerializer
 

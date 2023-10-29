@@ -22,6 +22,7 @@ router.register(r'updateProfile',ProfileUpdateViewSet,basename='updateprofile')
 router.register(r'updateProfileProps',PropsUpdateViewSet,basename='updateprops')
 router.register(r'updateProfileImage',ProfileImageViewSet,basename='updateprofileimage')
 router.register(r'tournamentCompetitors',TournamentCompetitors,basename='tournamentCompetitors')
+router.register(r'competitorTournaments',TournamentsByCompetitorViewSet,basename='competitorTournaments')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
