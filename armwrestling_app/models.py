@@ -45,7 +45,7 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     career_start_date = models.DateField(null=True,blank=True)
     image = models.ImageField(upload_to='media/competitors_userpictures',blank=True)
     rank = models.CharField(default='',blank=True,max_length=12)
-    phone = models.CharField(default='',blank=True,max_length=14)
+    phone = models.CharField(default='',blank=True,max_length=17)
     birthdate = models.DateField(null=True,blank=True)
     objects = CompetitorManager()
 
@@ -74,7 +74,7 @@ class Tournament(models.Model):
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
     date = models.DateField()
-    league = models.ForeignKey(League, on_delete=models.CASCADE, default='')
+    league = models.ForeignKey(League, on_delete=models.CASCADE, default='',blank=True)
     organizer = models.ForeignKey(Competitor, on_delete=models.CASCADE, default='')
     description = models.TextField(default='', blank=True)
     photo = models.ImageField(upload_to='media/tournaments_banners',blank=True)
@@ -83,19 +83,23 @@ class Tournament(models.Model):
     is_started = models.BooleanField(default=False)
     phone = models.CharField(blank=True,default="",max_length=25)
     level = models.CharField(blank=True,default="",max_length=15)
-
+    active = models.BooleanField(blank=True,default=False)
 
     main_secretary = models.ForeignKey(
         Competitor,
         on_delete=models.CASCADE,
         related_name='tournaments_main_secretary',
-        default=''
+        default='',
+        blank=True,
+        null=True
     )
     main_referee = models.ForeignKey(
         Competitor,
         on_delete=models.CASCADE,
         related_name='tournaments_main_referee',
-        default=''
+        default='',
+        blank=True,
+        null=True
     )
 
 
@@ -136,3 +140,28 @@ class TournamentWeightClasses(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(WeightClass, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+class Review(models.Model):
+    rating = models.FloatField(default=None,blank=True)
+    text = models.TextField()
+    author = models.ForeignKey(Competitor,on_delete=models.CASCADE)
+    date = models.DateField(default=None,blank=True)
+    verified = models.BooleanField(default=False,blank=True)
+
+
+class TournamentReview(Review):
+    tournament = models.ForeignKey(Tournament,on_delete=models.CASCADE)
+
+class LeagueReview(Review):
+    league = models.ForeignKey(League,on_delete=models.CASCADE)
+
+
+class Notification(models.Model):
+    competitor = models.ForeignKey(Competitor,on_delete=models.CASCADE)
+    message = models.TextField(blank=True)
+    datetime = models.DateTimeField()
+    read = models.BooleanField(blank=False,default=False)
+
+
+class TournamentNotification(Notification):
+    tournament = models.ForeignKey(Tournament,on_delete=models.CASCADE)

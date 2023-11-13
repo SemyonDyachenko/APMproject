@@ -7,8 +7,8 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import TournamentRegistration
 from django.db.models import Q
-
-
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from rest_framework.decorators import action
 
 class CompetitorViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.all().order_by('-elo_rating')
@@ -75,12 +75,14 @@ class ProfileUpdateViewSet(viewsets.ModelViewSet):
         firstname = request.data.get('firstname',None)
         lastname = request.data.get('lastname',None)
         country= request.data.get('country',None)
-        if competitor_id is not None and firstname is not None and lastname is not None and country is not None:
+        phone = request.data.get('phone',None)
+        if competitor_id is not None and phone is not None and firstname is not None and lastname is not None and country is not None:
             try:
                 competitor = Competitor.objects.get(id=competitor_id)
                 competitor.country = country
                 competitor.last_name = lastname
                 competitor.first_name = firstname
+                competitor.phone = phone
                 competitor.save()
                 serializer = CompetitorSerializer(competitor)
                 return Response(serializer.data)
@@ -128,16 +130,43 @@ class MatchViewSet(viewsets.ModelViewSet):
 class TournamentViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
     serializer_class = TournamentSerializer
+    
 
     def get_queryset(self):
         queryset = Tournament.objects.all()
+        queryset = queryset.filter()
         league = self.request.query_params.get('league', None)
-            
+        active = self.request.query_params.get('active',None)
+        organizer = self.request.query_params.get('organizer',None)
+
+        if organizer is not None:
+            organizerCompetitor = Competitor.objects.get(id=organizer)
+            queryset = queryset.filter(organizer = organizerCompetitor)
         if league is not None:
             queryset = queryset.filter(league=league)
+        if active is not None:
+            queryset = queryset.filter(active=active)
             
         return queryset
+
+class TournamentDeleteViewSet(viewsets.ModelViewSet):
+    serializer_class = TournamentSerializer
+    queryset = Tournament.objects.all()
     
+
+    def destroy(self, request, *args, **kwargs):
+        tournament_id = request.query_params.get('tournamentId', None)
+
+        if tournament_id is not None:
+            try:
+                tournament = Tournament.objects.get(id=tournament_id)
+                tournament.delete()
+                return Response({"detail": "Tournament successfully deleted"}, status=status.HTTP_200_OK)
+            except Tournament.DoesNotExist:
+                return Response({"detail": "Tournament not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"detail": "Invalid request. Provide 'tournamentId' parameter."}, status=status.HTTP_400_BAD_REQUEST)
+        
 
 class WeightClassViewSet(viewsets.ModelViewSet):
     queryset = WeightClass.objects.all()
@@ -193,11 +222,13 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
         tournament = request.data.get('tournament')
         competitor = request.data.get('competitor')
         weight_class = request.data.get('weight_class')
+        category = request.data.get('category')
 
         try:
             tournament_obj = Tournament.objects.get(id=tournament)
             competitor_obj = Competitor.objects.get(id=competitor)
             weight_class_obj = WeightClass.objects.get(id=weight_class)
+            
         except Tournament.DoesNotExist:
             return Response({'error': 'Tournament does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         except Competitor.DoesNotExist:
@@ -209,7 +240,7 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Tournament registration already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if serializer.is_valid():
-            serializer.save(tournament=tournament_obj, competitor=competitor_obj,weight_class=weight_class_obj)
+            serializer.save(tournament=tournament_obj, competitor=competitor_obj,weight_class=weight_class_obj,category=category)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -225,8 +256,17 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
         return queryset
 
 class TournamentWeightClassesViewSet(viewsets.ModelViewSet):
+    queryset = TournamentWeightClasses.objects.all()  
     serializer_class = TournamentWeightClassesSerializer
-    queryset = TournamentWeightClasses.objects.all()
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tournament_id = self.request.query_params.get('tournamentId', None)
+        if tournament_id is not None:
+            tournament = Tournament.objects.get(id=tournament_id)
+            queryset = queryset.filter(tournament=tournament)
+
+        return queryset
 
     class Meta:
         model = TournamentWeightClasses
@@ -273,3 +313,20 @@ class RatingViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+class TournamentReviewViewSet(viewsets.ModelViewSet):
+    queryset = TournamentReview.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return TournamentPOSTReviewSerializer
+        return TournamentReviewSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tournament_id = self.request.query_params.get('tournamentId', None)
+        if tournament_id is not None:
+            tournament = Tournament.objects.get(id=tournament_id)
+            queryset = queryset.filter(tournament=tournament)
+
+        return queryset

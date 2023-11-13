@@ -35,13 +35,22 @@ class MatchSerializer(serializers.ModelSerializer):
         model = Match
         fields = '__all__'
 
+
 class TournamentSerializer(serializers.ModelSerializer):
-    photo = serializers.ImageField()
-
-
     class Meta:
         model = Tournament
         fields = '__all__'
+
+
+class TournamentNotificationSerializer(serializers.ModelSerializer):
+    tournament = TournamentSerializer()
+    competitor = CompetitorSerializer()
+
+    class Meta:
+        model = TournamentNotification
+        fields = '__all__'
+
+
 
 class WeightClassSerializer(serializers.ModelSerializer):
 
@@ -49,13 +58,32 @@ class WeightClassSerializer(serializers.ModelSerializer):
         model = WeightClass
         fields = '__all__'
 
+class TournamentReviewSerializer(serializers.ModelSerializer):
+    author = CompetitorSerializer()
+    class Meta:
+        model = TournamentReview
+        fields = '__all__'
+
+class TournamentPOSTReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TournamentReview
+        fields = '__all__'
+
+class LeagueReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LeagueReview
+        fields = '__all__'
 
 class TournamentWeightClassesSerializer(serializers.ModelSerializer):
+    weight_class = WeightClassSerializer()
     class Meta:
         model = TournamentWeightClasses
         fields = ['id', 'tournament', 'weight_class']
 
 class TournamentRegistrationSerializer(serializers.ModelSerializer):
+    competitor = CompetitorSerializer()
+    weight_class = WeightClassSerializer()
+
     class Meta:
         model = TournamentRegistration
         fields = '__all__'
