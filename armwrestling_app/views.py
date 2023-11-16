@@ -9,6 +9,8 @@ from .models import TournamentRegistration
 from django.db.models import Q
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework.decorators import action
+from django.db.models import Avg
+from django.http import JsonResponse
 
 class CompetitorViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.all().order_by('-elo_rating')
@@ -149,6 +151,65 @@ class TournamentViewSet(viewsets.ModelViewSet):
             
         return queryset
 
+class TournamentUpdateViewSet(viewsets.ModelViewSet):
+    queryset = Tournament.objects.all()
+    serializer_class = TournamentSerializer
+
+    def update(self, request, *args, **kwargs):
+        tournamentId = request.data.get('tournamentId')
+
+        leagueId = request.data.get('league')
+        league = League.objects.get(id=leagueId)
+        description = request.data.get('description')
+        date = request.data.get('date')
+        city = request.data.get('city')
+        phone = request.data.get('phone')
+        level = request.data.get('level')
+        judge = request.data.get('judge')
+        main_referee = Competitor.objects.get(id=judge)
+        secretaryId = request.data.get('secretary')
+        secretary = Competitor.objects.get(id=secretaryId)
+        name = request.data.get('name')
+        print(request.data)
+        print(tournamentId)
+        print(name)
+        if tournamentId is not None:   
+            try:
+                tournament = Tournament.objects.get(id=tournamentId)
+                tournament.league = league
+                tournament.name = name
+                tournament.location = city
+                tournament.phone = phone
+                tournament.description = description
+                tournament.date = date
+                tournament.level = level
+                tournament.main_referee = main_referee
+                tournament.main_secretary = secretary
+                tournament.save()
+               
+                serializer = TournamentSerializer(tournament)
+                return Response(serializer.data)
+            except Tournament.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+class AvarageReviewsRatingTournament(viewsets.ModelViewSet):
+    serializer_class = TournamentReviewSerializer
+    queryset = TournamentReview.objects.all()
+
+    def get_queryset(self):
+        queryset = TournamentReview.objects.all()
+        tournament_id = self.request.query_params.get('tournamentId',None)
+        if tournament_id is not None:
+            tournament = Tournament.objects.get(id=tournament_id)
+            reviews = TournamentReview.objects.filter(tournament=tournament)
+            average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+            print(average_rating)
+            return [{'average_rating': average_rating}]
+        else:
+            return queryset
+
 class TournamentDeleteViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
     queryset = Tournament.objects.all()
@@ -167,6 +228,7 @@ class TournamentDeleteViewSet(viewsets.ModelViewSet):
         else:
             return Response({"detail": "Invalid request. Provide 'tournamentId' parameter."}, status=status.HTTP_400_BAD_REQUEST)
         
+
 
 class WeightClassViewSet(viewsets.ModelViewSet):
     queryset = WeightClass.objects.all()

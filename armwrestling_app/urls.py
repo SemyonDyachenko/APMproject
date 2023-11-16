@@ -25,6 +25,8 @@ router.register(r'tournamentCompetitors',TournamentCompetitors,basename='tournam
 router.register(r'competitorTournaments',TournamentsByCompetitorViewSet,basename='competitorTournaments')
 router.register(r'tournamentReviews',TournamentReviewViewSet,basename='tournamentReviews')
 router.register(r'deleteTournament',TournamentDeleteViewSet,basename='deleteTournament')
+router.register(r'updateTournament',TournamentUpdateViewSet,basename='updateTournament')
+router.register(r'averageTournamentReviews',AvarageReviewsRatingTournament,basename='avarageTournamentReviews')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
