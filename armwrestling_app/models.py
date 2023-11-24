@@ -49,6 +49,16 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     birthdate = models.DateField(null=True,blank=True)
     objects = CompetitorManager()
 
+    # stats
+    grip = models.IntegerField(blank=True,default=0)
+    biceps = models.IntegerField(blank=True,default=0)
+    crossbar = models.IntegerField(blank=True,default=0)
+    shaft = models.IntegerField(blank=True,default=0)
+    militarypress = models.IntegerField(blank=True,default=0)
+    hand = models.IntegerField(blank=True,default=0)
+    press = models.IntegerField(blank=True,default=0)
+    side = models.IntegerField(blank=True,default=0)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'gender']
 
@@ -101,6 +111,8 @@ class Tournament(models.Model):
         blank=True,
         null=True
     )
+
+    
 
 
     def __str__(self):

@@ -47,6 +47,42 @@ class PropsUpdateViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+class StatsUpdateViewSet(viewsets.ModelViewSet):
+    queryset = Competitor.objects.all()
+    serializer_class = ProfileSerializer
+
+    def update(self, request, *args, **kwargs):
+        competitor_id = request.data.get('id',None)
+        grip = request.data.get('grip',None)
+        biceps = request.data.get('biceps',None)
+        crossbar = request.data.get('crossbar',None)
+        shaft =  request.data.get('shaft',None)
+        militarypress =  request.data.get('militarypress',None)
+        hand = request.data.get('hand',None)
+        press = request.data.get('press',None)
+        side = request.data.get('side',None)
+        if competitor_id is not None:
+            try:
+                competitor = Competitor.objects.get(id=competitor_id)
+                competitor.grip = grip
+                competitor.biceps = biceps
+                competitor.shaft = shaft
+                competitor.crossbar = crossbar
+                competitor.militarypress = militarypress
+                competitor.hand = hand
+                competitor.press = press
+                competitor.side = side
+                competitor.save()
+                serializer = CompetitorSerializer(competitor)
+                return Response(serializer.data)
+            except Competitor.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
 
 class ProfileImageViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
@@ -124,6 +160,20 @@ class LeagueViewSet(viewsets.ModelViewSet):
     serializer_class = LeagueSerializer
 
 
+class LeagueByPresidentViewSet(viewsets.ModelViewSet):
+    queryset = League.objects.all()
+    serializer_class = LeagueSerializer
+
+    def get_queryset(self):
+        queryset = League.objects.all()
+        presidentId = self.request.query_params.get('presidentId',None)
+
+        if presidentId is not None: 
+            president = Competitor.objects.get(id=presidentId)
+            queryset = queryset.filter(president=president)
+        return queryset
+
+
 class MatchViewSet(viewsets.ModelViewSet):
     queryset = Match.objects.all()
     serializer_class = MatchSerializer
@@ -187,6 +237,25 @@ class TournamentUpdateViewSet(viewsets.ModelViewSet):
                 tournament.main_secretary = secretary
                 tournament.save()
                
+                serializer = TournamentSerializer(tournament)
+                return Response(serializer.data)
+            except Tournament.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+
+class TournamentActiveViewSet(viewsets.ModelViewSet):
+    queryset = Tournament.objects.all()
+    serializer_class = TournamentSerializer
+
+    def update(self, request, *args, **kwargs):
+        tournamentId = request.data.get('tournamentId')
+        if tournamentId is not None:   
+            try:
+                tournament = Tournament.objects.get(id=tournamentId)
+                tournament.active = True
+                tournament.save()
                 serializer = TournamentSerializer(tournament)
                 return Response(serializer.data)
             except Tournament.DoesNotExist:
@@ -392,3 +461,20 @@ class TournamentReviewViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tournament=tournament)
 
         return queryset
+
+class TournamentNotificationViewSet(viewsets.ModelViewSet):
+    serializer_class = TournamentNotificationSerializer
+    queryset = TournamentNotification.objects.all()
+
+    def get_queryset(self):
+        competitorId = self.request.query_params.get('competitorId',None)
+        if competitorId is not None:
+            competitor = Competitor.objects.get(id=competitorId)
+            queryset = TournamentNotification.objects.filter(competitor=competitor)
+            return queryset
+
+
+class TournamentNotificationCreateViewSet(viewsets.ModelViewSet):
+    serializer_class = TournamentNotificationCreateSerializer
+    queryset = TournamentNotification.objects.all()
+    

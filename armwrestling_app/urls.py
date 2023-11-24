@@ -20,6 +20,7 @@ router.register(r'tournament_weightclasses',TournamentWeightClassesViewSet,basen
 router.register(r'startTournament',TournamentProtocolViewSet, basename='starttournament')
 router.register(r'updateProfile',ProfileUpdateViewSet,basename='updateprofile')
 router.register(r'updateProfileProps',PropsUpdateViewSet,basename='updateprops')
+router.register(r'updateProfileStats',StatsUpdateViewSet,basename='updatestats')
 router.register(r'updateProfileImage',ProfileImageViewSet,basename='updateprofileimage')
 router.register(r'tournamentCompetitors',TournamentCompetitors,basename='tournamentCompetitors')
 router.register(r'competitorTournaments',TournamentsByCompetitorViewSet,basename='competitorTournaments')
@@ -27,6 +28,10 @@ router.register(r'tournamentReviews',TournamentReviewViewSet,basename='tournamen
 router.register(r'deleteTournament',TournamentDeleteViewSet,basename='deleteTournament')
 router.register(r'updateTournament',TournamentUpdateViewSet,basename='updateTournament')
 router.register(r'averageTournamentReviews',AvarageReviewsRatingTournament,basename='avarageTournamentReviews')
+router.register(r'leagueByPresident',LeagueByPresidentViewSet,basename='leagueByPresident')
+router.register(r'tournamentNotifications',TournamentNotificationViewSet,basename='tournamentNotifications')
+router.register(r'tournamentNotificationCreate',TournamentNotificationCreateViewSet,basename='tournamentNoficationCreate')
+router.register(r'tournamentActive',TournamentActiveViewSet,basename='tournamentActivate')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

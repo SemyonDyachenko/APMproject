@@ -10,7 +10,7 @@ class CompetitorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Competitor
-        fields = ['id', 'email', 'mode', 'first_name', 'last_name', 'gender', 'country','trainer', 'elo_rating', 'password', 'kFactor','weight','rank','image','description','height','city','birthdate','career_start_date']
+        fields = ['id', 'email', 'mode', 'first_name', 'last_name', 'gender', 'country','trainer', 'elo_rating', 'password', 'kFactor','weight','rank','image','description','height','city','birthdate','career_start_date','grip','biceps','crossbar','shaft','militarypress','hand','press','side']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -46,6 +46,12 @@ class TournamentNotificationSerializer(serializers.ModelSerializer):
     tournament = TournamentSerializer()
     competitor = CompetitorSerializer()
 
+    class Meta:
+        model = TournamentNotification
+        fields = '__all__'
+
+
+class TournamentNotificationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TournamentNotification
         fields = '__all__'
