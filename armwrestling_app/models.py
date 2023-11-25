@@ -177,3 +177,10 @@ class Notification(models.Model):
 
 class TournamentNotification(Notification):
     tournament = models.ForeignKey(Tournament,on_delete=models.CASCADE)
+
+
+class LeagueCompetitor(models.Model):
+    league = models.ForeignKey(League,on_delete=models.CASCADE)
+    competitor = models.ForeignKey(Competitor,on_delete=models.CASCADE)
+    accepted = models.BooleanField(default=False)
+    request_date = models.DateField(blank=True,default='')

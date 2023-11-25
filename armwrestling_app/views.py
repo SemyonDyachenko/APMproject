@@ -160,6 +160,80 @@ class LeagueViewSet(viewsets.ModelViewSet):
     serializer_class = LeagueSerializer
 
 
+class LeagueUpdateViewSet(viewsets.ModelViewSet):
+    queryset = League.objects.all()
+    serializer_class = LeagueSerializer
+
+    def update(self, request, *args, **kwargs):
+        leagueId = request.data.get('leagueId')
+    
+        description = request.data.get('description')
+        creation_date = request.data.get('creation_date')
+        email = request.data.get('email')
+        phone = request.data.get('phone')
+        level = request.data.get('level')
+        country = request.data.get('country')
+        name = request.data.get('name')
+    
+        if leagueId is not None:   
+            try:
+                league = League.objects.get(id=leagueId)
+                league.name = name
+                league.country = country
+                league.phone = phone
+                league.email = email
+                league.description = description
+                league.creation_date = creation_date
+                league.level = level
+                league.save()
+               
+                serializer = LeagueSerializer(league)
+                return Response(serializer.data)
+            except League.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class LeagueCompetitorsViewSet(viewsets.ModelViewSet):
+    queryset = LeagueCompetitor.objects.all()
+    serializer_class = LeagueCompetitorSerializer
+
+
+    def get_queryset(self):
+        leagueId = self.request.query_params.get('leagueId',None)
+        queryset = super().get_queryset()
+
+        if leagueId is not None:
+            league = League.objects.get(id=leagueId)
+            if league is not None:
+                queryset = queryset.filter(league=league)
+        return queryset
+    
+
+class LeagueCompetitorCreate(viewsets.ModelViewSet):
+    serializer_class = LeagueCompetitorPOSTSerializer
+    queryset = LeagueCompetitor.objects.all()
+
+class LeagueCompetitorAccept(viewsets.ModelViewSet):
+    serializer_class = LeagueCompetitorSerializer
+    queryset = LeagueCompetitor.objects.all() 
+    
+    def update(self, request, *args, **kwargs):
+        competitorId = request.data.get('competitorId')
+        if competitorId is not None:   
+            try:
+                competitor = LeagueCompetitor.objects.get(id=competitorId)
+                competitor.accepted = True
+                competitor.save()
+                serializer = LeagueCompetitorSerializer(competitor)
+                return Response(serializer.data)
+            except LeagueCompetitor.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+
 class LeagueByPresidentViewSet(viewsets.ModelViewSet):
     queryset = League.objects.all()
     serializer_class = LeagueSerializer

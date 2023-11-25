@@ -29,6 +29,21 @@ class LeagueSerializer(serializers.ModelSerializer):
         model = League
         fields = '__all__'
 
+class LeagueCompetitorSerializer(serializers.ModelSerializer):
+    competitor = CompetitorSerializer()
+    league = LeagueSerializer()
+
+    class Meta:
+        model =LeagueCompetitor
+        fields = '__all__'
+        
+class LeagueCompetitorPOSTSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model =LeagueCompetitor
+        fields = '__all__'
+
+
 class MatchSerializer(serializers.ModelSerializer):
 
     class Meta:

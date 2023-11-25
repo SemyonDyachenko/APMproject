@@ -32,6 +32,11 @@ router.register(r'leagueByPresident',LeagueByPresidentViewSet,basename='leagueBy
 router.register(r'tournamentNotifications',TournamentNotificationViewSet,basename='tournamentNotifications')
 router.register(r'tournamentNotificationCreate',TournamentNotificationCreateViewSet,basename='tournamentNoficationCreate')
 router.register(r'tournamentActive',TournamentActiveViewSet,basename='tournamentActivate')
+router.register(r'updateLeague',LeagueUpdateViewSet,basename='leagueUpdate')
+router.register(r'leagueCompetitors',LeagueCompetitorsViewSet,basename='leagueCompetitors')
+router.register(r'leagueCompetitorCreate',LeagueCompetitorCreate,basename='leagueCompetitorCreate')
+router.register(r'leagueCompetitorAccept',LeagueCompetitorAccept,basename='leagueCompetitorAccept')
+
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
