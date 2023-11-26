@@ -2,9 +2,14 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 import datetime
 
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+from django.conf import settings
+from django.core.mail import message,send_mail
+import uuid
+
 class WeightClass(models.Model):
     name = models.CharField(max_length=255)
-
 
     def __str__(self):
         return self.name
@@ -47,6 +52,7 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     rank = models.CharField(default='',blank=True,max_length=12)
     phone = models.CharField(default='',blank=True,max_length=17)
     birthdate = models.DateField(null=True,blank=True)
+    verified = models.BooleanField(default=False,blank=True)
     objects = CompetitorManager()
 
     # stats
@@ -59,11 +65,17 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     press = models.IntegerField(blank=True,default=0)
     side = models.IntegerField(blank=True,default=0)
 
+    token = models.CharField(max_length=255, blank=True, null=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'gender']
 
     def str(self):
         return f"{self.first_name} {self.last_name}"
+
+
+
+
 
 
 class League(models.Model):
@@ -77,6 +89,10 @@ class League(models.Model):
     phone=models.CharField(blank=True,default='',max_length=15)
     email = models.CharField(blank=True,default='',max_length=99)
 
+
+    logo = models.ImageField(upload_to='media/league_logo',blank=True)
+    banner = models.ImageField(upload_to='media/league_banner',blank=True)
+
     def __str__(self):
         return f'{self.name} , President: {self.president}'
 
@@ -87,13 +103,15 @@ class Tournament(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE, default='',blank=True)
     organizer = models.ForeignKey(Competitor, on_delete=models.CASCADE, default='')
     description = models.TextField(default='', blank=True)
-    photo = models.ImageField(upload_to='media/tournaments_banners',blank=True)
+    banner = models.ImageField(upload_to='media/tournaments_banners',blank=True)
     avg_rating = models.IntegerField(default='0')
     address = models.CharField(max_length=100,default='')
     is_started = models.BooleanField(default=False)
     phone = models.CharField(blank=True,default="",max_length=25)
     level = models.CharField(blank=True,default="",max_length=15)
     active = models.BooleanField(blank=True,default=False)
+
+    logo = models.ImageField(upload_to='media/tournaments_logo',blank=True)
 
     main_secretary = models.ForeignKey(
         Competitor,

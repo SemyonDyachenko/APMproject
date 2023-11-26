@@ -36,6 +36,10 @@ router.register(r'updateLeague',LeagueUpdateViewSet,basename='leagueUpdate')
 router.register(r'leagueCompetitors',LeagueCompetitorsViewSet,basename='leagueCompetitors')
 router.register(r'leagueCompetitorCreate',LeagueCompetitorCreate,basename='leagueCompetitorCreate')
 router.register(r'leagueCompetitorAccept',LeagueCompetitorAccept,basename='leagueCompetitorAccept')
+router.register(r'confirm',CompetitorConfirmViewSet,basename='confirm')
+router.register(r'deleteLeague',LeagueDeleteViewSet,basename='leagueDelete')
+router.register(r'leagueUpdateImages',LeagueUpdateImageViewSet,basename='leagueImagesUpdate')
+router.register(r'tournamentUpdateImage',TournamentUpdateImageViewSet,basename='tournamentUpdateImage')
 
 urlpatterns = [
     path('', include(router.urls)),

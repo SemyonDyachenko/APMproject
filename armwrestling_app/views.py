@@ -10,12 +10,61 @@ from django.db.models import Q
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework.decorators import action
 from django.db.models import Avg
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import  redirect
+
+def generate_token():
+    import secrets
+    return secrets.token_urlsafe(30)
+
+def send_confirmation_email(user, token):
+    subject = 'Подтверждение регистрации'
+    message = f'Пожалуйста, перейдите по ссылке для подтверждения: http://127.0.0.1:8000/api/confirm/?token={token}'
+    from_email = 'semyondyachenko@gmail.com'  # Замените на ваш адрес электронной почты
+    to_email = user.email
+
+    send_mail(subject, message, from_email, [to_email])
 
 class CompetitorViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.all().order_by('-elo_rating')
     serializer_class = CompetitorSerializer
 
+    @action(detail=True, methods=['GET'])
+    def rating_position(self, request, pk=None):
+        competitor = self.get_object()
+        rating_queryset = Competitor.objects.all().order_by('-elo_rating')
+        rating_list = list(rating_queryset.values_list('id', flat=True))
+        position = rating_list.index(competitor.id) + 1
+
+        return Response({'rating_position': position})
+
+
+    def perform_create(self, serializer):
+        instance = serializer.save(token=generate_token())
+        send_confirmation_email(instance, instance.token)
+
+
+class CompetitorConfirmViewSet(viewsets.ModelViewSet):
+    queryset = Competitor.objects.all()
+    serializer_class = CompetitorSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        token = self.request.query_params.get('token')
+        
+        if token is not None:
+            try:
+                competitor = Competitor.objects.get(token=token)
+                competitor.verified = True
+                competitor.save()
+                # Вернем редирект
+                return Response(status=status.HTTP_302_FOUND, headers={'Location': 'http://localhost:5173/profile'})
+            except Competitor.DoesNotExist:
+                pass
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
 
 class PropsUpdateViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.all()
@@ -160,6 +209,30 @@ class LeagueViewSet(viewsets.ModelViewSet):
     serializer_class = LeagueSerializer
 
 
+
+
+class LeagueDeleteViewSet(viewsets.ModelViewSet):
+    serializer_class = LeagueSerializer
+    queryset = League.objects.all()
+    
+    def destroy(self, request, *args, **kwargs):
+        league_id = request.query_params.get('leagueId', None)
+        competitor_id = request.query_params.get('competitorId',None)
+        if league_id is not None and competitor_id is not None:
+            try:
+                league = League.objects.get(id=league_id)
+                competitor = Competitor.objects.get(id=competitor_id)
+                if league.president == competitor:
+                    league.delete()
+                return Response({"detail": "League successfully deleted"}, status=status.HTTP_200_OK)
+            except League.DoesNotExist:
+                return Response({"detail": "League not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"detail": "Invalid request. Provide 'tournamentId' parameter."}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+
 class LeagueUpdateViewSet(viewsets.ModelViewSet):
     queryset = League.objects.all()
     serializer_class = LeagueSerializer
@@ -195,6 +268,32 @@ class LeagueUpdateViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class LeagueUpdateImageViewSet(viewsets.ModelViewSet):
+    queryset = League.objects.all()
+    serializer_class = LeagueSerializer
+
+    def update(self, request, *args, **kwargs):
+        leagueId = request.data.get('leagueId')
+        banner = request.data.get('banner',None)
+        logo = request.data.get('logo',None)
+
+        if leagueId is not None:   
+            try:
+                league = League.objects.get(id=leagueId)
+                
+                if banner is not None:
+                    league.banner = banner
+                if logo is not None:
+                    league.logo = logo
+                league.save()
+                serializer = LeagueSerializer(league)
+                return Response(serializer.data)
+            except League.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class LeagueCompetitorsViewSet(viewsets.ModelViewSet):
     queryset = LeagueCompetitor.objects.all()
     serializer_class = LeagueCompetitorSerializer
@@ -202,8 +301,15 @@ class LeagueCompetitorsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         leagueId = self.request.query_params.get('leagueId',None)
-        queryset = super().get_queryset()
+        competitorId =self.request.query_params.get('competitorId',None)
 
+        queryset = super().get_queryset()
+        
+        if competitorId is not None:
+            competitor = Competitor.objects.get(id=competitorId)
+            if competitor is not None:
+                queryset = queryset.filter(competitor=competitor)
+         
         if leagueId is not None:
             league = League.objects.get(id=leagueId)
             if league is not None:
@@ -317,6 +423,32 @@ class TournamentUpdateViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class TournamentUpdateImageViewSet(viewsets.ModelViewSet):
+    queryset = Tournament.objects.all()
+    serializer_class = TournamentSerializer
+
+    def update(self, request, *args, **kwargs):
+        tournamentId = request.data.get('tournamentId')
+        banner = request.data.get('banner',None)
+        logo = request.data.get('logo',None)
+
+        if tournamentId is not None:   
+            try:
+                tournament = Tournament.objects.get(id=tournamentId)
+                
+                if banner is not None:
+                    tournament.banner = banner
+                if logo is not None:
+                    tournament.logo = logo
+                tournament.save()
+                serializer = TournamentSerializer(tournament)
+                return Response(serializer.data)
+            except Tournament.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         
 
 class TournamentActiveViewSet(viewsets.ModelViewSet):
@@ -341,17 +473,16 @@ class AvarageReviewsRatingTournament(viewsets.ModelViewSet):
     serializer_class = TournamentReviewSerializer
     queryset = TournamentReview.objects.all()
 
-    def get_queryset(self):
-        queryset = TournamentReview.objects.all()
-        tournament_id = self.request.query_params.get('tournamentId',None)
+    @action(detail=False, methods=['GET'])
+    def get_avarage(self, request):
+        tournament_id = request.query_params.get('tournamentId', None)
         if tournament_id is not None:
-            tournament = Tournament.objects.get(id=tournament_id)
-            reviews = TournamentReview.objects.filter(tournament=tournament)
+            reviews = TournamentReview.objects.filter(tournament__id=tournament_id)
             average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
             print(average_rating)
-            return [{'average_rating': average_rating}]
+            return Response({'average_rating': average_rating})
         else:
-            return queryset
+            return Response({'error': 'Please provide a tournamentId parameter'})
 
 class TournamentDeleteViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
