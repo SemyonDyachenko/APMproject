@@ -91,9 +91,17 @@ class TournamentPOSTReviewSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class LeagueReviewSerializer(serializers.ModelSerializer):
+    author = CompetitorSerializer()
+
     class Meta:
         model = LeagueReview
         fields = '__all__'
+
+class LeaguePOSTReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LeagueReview
+        fields = '__all__'
+
 
 class TournamentWeightClassesSerializer(serializers.ModelSerializer):
     weight_class = WeightClassSerializer()

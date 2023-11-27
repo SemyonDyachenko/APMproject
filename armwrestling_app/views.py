@@ -26,13 +26,13 @@ def send_confirmation_email(user, token):
     send_mail(subject, message, from_email, [to_email])
 
 class CompetitorViewSet(viewsets.ModelViewSet):
-    queryset = Competitor.objects.all().order_by('-elo_rating')
+    queryset = Competitor.objects.filter(verified=True).order_by('-elo_rating')
     serializer_class = CompetitorSerializer
 
     @action(detail=True, methods=['GET'])
     def rating_position(self, request, pk=None):
         competitor = self.get_object()
-        rating_queryset = Competitor.objects.all().order_by('-elo_rating')
+        rating_queryset = Competitor.objects.filter(verified=True).order_by('-elo_rating')
         rating_list = list(rating_queryset.values_list('id', flat=True))
         position = rating_list.index(competitor.id) + 1
 
@@ -152,6 +152,26 @@ class ProfileImageViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class ProfileImageDeleteViewSet(viewsets.ModelViewSet):
+    serializer_class = ProfileSerializer
+    queryset = Competitor.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        competitor_id = request.data.get('id',None)
+
+        if competitor_id is not None:
+            try: 
+                competitor = Competitor.objects.get(id=competitor_id)
+                competitor.image = None
+                competitor.save()
+                serializer = CompetitorSerializer(competitor)
+                return Response(serializer.data)
+            except Competitor.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 class ProfileUpdateViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
@@ -484,6 +504,22 @@ class AvarageReviewsRatingTournament(viewsets.ModelViewSet):
         else:
             return Response({'error': 'Please provide a tournamentId parameter'})
 
+class AvarageReviewsRatingLeague(viewsets.ModelViewSet):
+    serializer_class = LeagueReviewSerializer
+    queryset = LeagueReview.objects.all()
+
+    @action(detail=False, methods=['GET'])
+    def get_avarage(self, request):
+        league_id = request.query_params.get('leagueId', None)
+        if league_id is not None:
+            reviews = LeagueReview.objects.filter(league__id=league_id)
+            average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+            print(average_rating)
+            return Response({'average_rating': average_rating})
+        else:
+            return Response({'error': 'Please provide a tournamentId parameter'})
+
+
 class TournamentDeleteViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
     queryset = Tournament.objects.all()
@@ -664,6 +700,24 @@ class TournamentReviewViewSet(viewsets.ModelViewSet):
         if tournament_id is not None:
             tournament = Tournament.objects.get(id=tournament_id)
             queryset = queryset.filter(tournament=tournament)
+
+        return queryset
+    
+
+class LeagueReviewViewSet(viewsets.ModelViewSet):
+    queryset = LeagueReview.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return LeaguePOSTReviewSerializer
+        return LeagueReviewSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        league_id = self.request.query_params.get('leagueId', None)
+        if league_id is not None:
+            league = League.objects.get(id=league_id)
+            queryset = queryset.filter(league=league)
 
         return queryset
 
