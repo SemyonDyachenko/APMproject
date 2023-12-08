@@ -11,10 +11,12 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework.decorators import action
 from django.db.models import Avg
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import  redirect
+from django.shortcuts import  get_object_or_404, redirect
+from django.contrib.auth import update_session_auth_hash
+import string
+import secrets 
 
 def generate_token():
-    import secrets
     return secrets.token_urlsafe(30)
 
 def send_confirmation_email(user, token):
@@ -38,6 +40,26 @@ class CompetitorViewSet(viewsets.ModelViewSet):
 
         return Response({'rating_position': position})
 
+    @action(detail=False, methods=['post'])
+    def change_password(self, request):
+        competitorId = request.data.get('competitorId',None)
+        current_password = request.data.get('current_password', '')
+        new_password = request.data.get('new_password', '')
+
+        # Проверка текущего пароля
+        if competitorId is not None:
+            competitor = Competitor.objects.get(id=competitorId)
+
+            if not competitor.check_password(current_password):
+                return Response({'detail': 'Current password is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Установка нового пароля
+            competitor.set_password(new_password)
+            competitor.save()
+
+        # Обновление сессии с новым хешем пароля
+        update_session_auth_hash(request, competitor)
+
+        return Response({'detail': 'Password successfully updated.'}, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
         instance = serializer.save(token=generate_token())
@@ -420,9 +442,8 @@ class TournamentUpdateViewSet(viewsets.ModelViewSet):
         secretaryId = request.data.get('secretary')
         secretary = Competitor.objects.get(id=secretaryId)
         name = request.data.get('name')
-        print(request.data)
-        print(tournamentId)
-        print(name)
+        afisha = request.data.get('afisha',None)
+
         if tournamentId is not None:   
             try:
                 tournament = Tournament.objects.get(id=tournamentId)
@@ -435,6 +456,7 @@ class TournamentUpdateViewSet(viewsets.ModelViewSet):
                 tournament.level = level
                 tournament.main_referee = main_referee
                 tournament.main_secretary = secretary
+                tournament.afisha = afisha
                 tournament.save()
                
                 serializer = TournamentSerializer(tournament)
@@ -544,6 +566,51 @@ class WeightClassViewSet(viewsets.ModelViewSet):
     queryset = WeightClass.objects.all()
     serializer_class = WeightClassSerializer
 
+class TournamentWeightClassesCreateViewSet(viewsets.ModelViewSet):
+    serializer_class = TournamentWeightClassesSerializer
+    queryset = TournamentWeightClasses.objects.all()
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tournamentId = self.request.query_params.get('tournamentId',None)
+        if tournamentId is not None:
+            tournament = Tournament.objects.get(id=tournamentId)
+            queryset = TournamentWeightClasses.objects.filter(tournament=tournament)
+        return queryset
+    
+    def create(self, request, *args, **kwargs):
+        tournament_id = request.data.get('tournamentId')
+
+        try:
+            tournament = Tournament.objects.get(id=tournament_id)
+        except Tournament.DoesNotExist:
+            return Response({'error': 'Tournament does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+        tournament_weight_classes = []
+        for category, weights in request.data.items():
+            if category != 'tournamentId':
+                for weight_data in weights:
+                    weight_name = weight_data['name']
+                    
+                    try:
+                        # Попытка получить существующий объект WeightClass по имени
+                        weight_class = WeightClass.objects.get(name=weight_name)
+                    except WeightClass.DoesNotExist:
+                        # Если объект WeightClass не существует, создаем новый
+                        weight_class = WeightClass.objects.create(name=weight_name)
+
+                    # Создание TournamentWeightClass с связанным WeightClass
+                    tournament_weight_class = TournamentWeightClasses.objects.create(
+                        tournament=tournament,
+                        weight_class=weight_class,
+                        category=category
+                    )
+                    
+                    tournament_weight_classes.append(tournament_weight_class)
+
+        serializer = TournamentWeightClassesSerializer(tournament_weight_classes, many=True)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+
 class TournamentProtocolViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentSerializer
     queryset = Tournament.objects.all()
@@ -582,15 +649,19 @@ class TournamentCompetitors(viewsets.ReadOnlyModelViewSet):
     return Competitor.objects.filter(tournamentregistration__tournament_id=tournament_id)
    
 class TournamentRegistrationViewSet(viewsets.ModelViewSet):
-    serializer_class = TournamentRegistrationSerializer
     queryset = TournamentRegistration.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return TournamentRegistrationPOSTSerializer
+        return TournamentRegistrationSerializer
+
 
     class Meta:
         model = TournamentRegistration
         fields = '__all__'
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
         tournament = request.data.get('tournament')
         competitor = request.data.get('competitor')
         weight_class = request.data.get('weight_class')
@@ -599,23 +670,37 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
         try:
             tournament_obj = Tournament.objects.get(id=tournament)
             competitor_obj = Competitor.objects.get(id=competitor)
-            weight_class_obj = WeightClass.objects.get(id=weight_class)
-            
+            tournament_weight_class_obj = TournamentWeightClasses.objects.get(id=weight_class)
+            if tournament_weight_class_obj:
+                weight_class_obj = tournament_weight_class_obj.weight_class
+        
         except Tournament.DoesNotExist:
             return Response({'error': 'Tournament does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         except Competitor.DoesNotExist:
             return Response({'error': 'Competitor does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
-        except WeightClass.DoesNotExist:
+        except TournamentWeightClasses.DoesNotExist:
             return Response({'error': 'Weight Class does not exist.'},status=status.HTTP_400_BAD_REQUEST)
 
         if TournamentRegistration.objects.filter(tournament=tournament_obj, competitor=competitor_obj, weight_class=weight_class_obj).exists():
             return Response({'error': 'Tournament registration already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if serializer.is_valid():
-            serializer.save(tournament=tournament_obj, competitor=competitor_obj,weight_class=weight_class_obj,category=category)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        existing_registration = TournamentRegistration.objects.filter(
+            tournament=tournament_obj,
+            competitor=competitor_obj,
+            weight_class=weight_class_obj
+        )
+
+        if existing_registration.exists():
+            return Response({'error': 'Registration already exists.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            registration = TournamentRegistration()
+            registration.tournament = tournament_obj
+            registration.competitor = competitor_obj
+            registration.category = category
+            registration.weight_class = weight_class_obj
+            registration.save()
+            serializer = TournamentRegistrationSerializer(registration)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -736,4 +821,76 @@ class TournamentNotificationViewSet(viewsets.ModelViewSet):
 class TournamentNotificationCreateViewSet(viewsets.ModelViewSet):
     serializer_class = TournamentNotificationCreateSerializer
     queryset = TournamentNotification.objects.all()
-    
+
+    def create(self, request, *args, **kwargs):
+        competitor = request.data.get('competitor')
+        tournament = request.data.get('tournament')
+        read  = request.data.get('read')
+        datetime = request.data.get('datetime')
+        message = request.data.get('message')
+        if competitor is not None and tournament is not None:
+            competitor_instance = Competitor.objects.get(id=competitor)
+            tournament_instance = Tournament.objects.get(id=tournament)
+
+            # Используйте filter вместо get
+            exists = TournamentNotification.objects.filter(tournament=tournament_instance)
+
+            if not exists.exists():
+                notification = TournamentNotification()
+                notification.competitor = competitor_instance
+                notification.tournament = tournament_instance
+                notification.message = message
+                notification.read = read
+                notification.datetime = datetime
+                notification.save()
+                serializer = TournamentNotificationSerializer(notification)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class SupportRequestViewSet(viewsets.ModelViewSet):
+    serializer_class = SupportRequestSerializer
+    queryset = SupportRequest.objects.all()
+
+# PASWORD RESTORE ##################
+
+def send_restore_password_link(user, password):
+    subject = 'Восстановление пароля'
+    message = f'Временный пароль для авторизации: {password}. Пожалуйста измените пароль в профиле после успешной авторизации.'
+    from_email = 'semyondyachenko@gmail.com'  # Замените на ваш адрес электронной почты
+    to_email = user.email
+
+    send_mail(subject, message, from_email, [to_email])
+
+def generate_password(length=8):
+    letters = ''.join(secrets.choice(string.ascii_letters) for _ in range(6))
+    digit = secrets.choice(string.digits)
+    punctuation = secrets.choice(string.punctuation)
+    password = letters + digit + punctuation
+    password = ''.join(secrets.choice(password) for _ in range(length))
+    return password
+
+class PasswordRestoreViewSet(viewsets.ModelViewSet):
+    serializer_class = CompetitorSerializer
+
+    @action(detail=False, methods=['GET'])
+    def restore_passord(self, request, pk=None):
+        email = request.query_params.get('email')
+        if email is not None:
+            competitor = Competitor.objects.filter(email=email)
+            if competitor.exists():
+                try:
+                    competitor_obj = Competitor.objects.get(email=email)
+                    new_pass = generate_password()
+                    competitor_obj.set_password(new_pass)
+                    competitor_obj.save()
+                    update_session_auth_hash(request, competitor_obj)
+                    send_restore_password_link(competitor_obj,new_pass)
+                    # Вернуть отрендеренный ответ
+                    return Response({'detail': 'Password updated successfully'}, status=status.HTTP_201_CREATED)
+                except Exception as e:
+                    print(f"Error: {e}")
+                    return Response({'detail': 'Error updating password'}, status=status.HTTP_400_BAD_REQUEST)

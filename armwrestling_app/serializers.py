@@ -107,7 +107,7 @@ class TournamentWeightClassesSerializer(serializers.ModelSerializer):
     weight_class = WeightClassSerializer()
     class Meta:
         model = TournamentWeightClasses
-        fields = ['id', 'tournament', 'weight_class']
+        fields = ['id', 'tournament', 'weight_class','category']
 
 class TournamentRegistrationSerializer(serializers.ModelSerializer):
     competitor = CompetitorSerializer()
@@ -118,3 +118,16 @@ class TournamentRegistrationSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['id']
 
+class TournamentRegistrationPOSTSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TournamentRegistration
+        fields = '__all__'
+        read_only_fields = ['id']
+
+
+class SupportRequestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SupportRequest
+        fields = '__all__'

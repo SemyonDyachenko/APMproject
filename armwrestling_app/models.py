@@ -37,7 +37,7 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=1)
     # weight_class = models.ForeignKey('WeightClass', on_delete=models.CASCADE, related_name='WeightClasses',blank=True)
     elo_rating = models.IntegerField(default=1000)
-    country = models.CharField(max_length=50,default="Russia")
+    country = models.CharField(max_length=50,default="Россия")
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     kFactor = models.IntegerField(default=30, blank=True)
@@ -111,6 +111,7 @@ class Tournament(models.Model):
     level = models.CharField(blank=True,default="",max_length=15)
     active = models.BooleanField(blank=True,default=False)
 
+    afisha = models.ImageField(upload_to='media/tournaments_afisha',blank=True)
     logo = models.ImageField(upload_to='media/tournaments_logo',blank=True)
 
     main_secretary = models.ForeignKey(
@@ -166,9 +167,11 @@ class TournamentRegistration(models.Model):
         return f'{self.competitor} - {self.tournament} - {self.registration_date}'
 
 
+
 class TournamentWeightClasses(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(WeightClass, on_delete=models.CASCADE)
+    category = models.CharField(max_length=50,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Review(models.Model):
@@ -202,3 +205,18 @@ class LeagueCompetitor(models.Model):
     competitor = models.ForeignKey(Competitor,on_delete=models.CASCADE)
     accepted = models.BooleanField(default=False)
     request_date = models.DateField(blank=True,default='')
+
+
+class SupportRequest(models.Model):
+    message = models.TextField()
+    email = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+    datetime = models.DateTimeField(blank=True)
+
+
+class Team(models.Model):
+    name = models.CharField(max_length=120)
+    description = models.TextField()
+    created_at = models.DateTimeField(default=datetime.datetime.now())
+    status = models.CharField(max_length=30)
+    

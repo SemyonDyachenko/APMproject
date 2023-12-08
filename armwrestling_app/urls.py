@@ -43,7 +43,9 @@ router.register(r'confirm',CompetitorConfirmViewSet,basename='confirm')
 router.register(r'deleteLeague',LeagueDeleteViewSet,basename='leagueDelete')
 router.register(r'leagueUpdateImages',LeagueUpdateImageViewSet,basename='leagueImagesUpdate')
 router.register(r'tournamentUpdateImage',TournamentUpdateImageViewSet,basename='tournamentUpdateImage')
-
+router.register(r'createTournamentWeightClasses',TournamentWeightClassesCreateViewSet,basename='createTournamentWeightClass')
+router.register(r'passwordRestore',PasswordRestoreViewSet,basename='passwordRestore')
+router.register(r'supportRequest',SupportRequestViewSet,basename='supportRequest')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
