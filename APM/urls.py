@@ -18,6 +18,7 @@ from django.urls import path,include
 import os
 from pathlib import Path
 from django.conf.urls.static import static
+from django.conf import settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -26,4 +27,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('armwrestling_app.urls'))
 ]
-urlpatterns += static(os.getenv('MEDIA_URL'), document_root=MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(os.getenv('MEDIA_URL'), document_root=MEDIA_ROOT)

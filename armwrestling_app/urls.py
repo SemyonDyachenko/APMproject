@@ -46,6 +46,7 @@ router.register(r'tournamentUpdateImage',TournamentUpdateImageViewSet,basename='
 router.register(r'createTournamentWeightClasses',TournamentWeightClassesCreateViewSet,basename='createTournamentWeightClass')
 router.register(r'passwordRestore',PasswordRestoreViewSet,basename='passwordRestore')
 router.register(r'supportRequest',SupportRequestViewSet,basename='supportRequest')
+router.register(r'team',TeamViewSet,basename='team')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

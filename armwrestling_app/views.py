@@ -894,3 +894,38 @@ class PasswordRestoreViewSet(viewsets.ModelViewSet):
                 except Exception as e:
                     print(f"Error: {e}")
                     return Response({'detail': 'Error updating password'}, status=status.HTTP_400_BAD_REQUEST)
+                
+
+class TeamViewSet(viewsets.ModelViewSet):
+    serializer_class = TeamSerializer
+    queryset = Team.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        teamId = request.data.get('teamId')
+    
+        description = request.data.get('description')
+        location = request.data.get('location')
+        email = request.data.get('email')
+        phone = request.data.get('phone')
+        status = request.data.get('status')
+        country = request.data.get('country')
+        name = request.data.get('name')
+    
+        if teamId is not None:   
+            try:
+                team = Team.objects.get(id=teamId)
+                team.name = name
+                team.country = country
+                team.phone = phone
+                team.email = email
+                team.description = description
+                team.location = location
+                team.status = status
+                team.save()
+               
+                serializer = TeamSerializer(team)
+                return Response(serializer.data)
+            except Team.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)

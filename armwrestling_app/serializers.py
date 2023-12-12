@@ -3,19 +3,28 @@ from .models import *
 from django.contrib.auth.hashers import make_password
 
 
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = '__all__'
+
+
 class CompetitorSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     kFactor = serializers.IntegerField(read_only=True)
-
+    team  = TeamSerializer()
 
     class Meta:
         model = Competitor
-        fields = ['id', 'email','verified', 'mode', 'first_name', 'last_name', 'gender', 'country','trainer', 'elo_rating', 'password', 'kFactor','weight','rank','image','description','height','city','birthdate','career_start_date','grip','biceps','crossbar','shaft','militarypress','hand','press','side']
+        fields = ['id', 'email','verified', 'mode', 'first_name', 'last_name', 'gender','team','country','trainer', 'elo_rating', 'password', 'kFactor','weight','rank','image','description','height','city','birthdate','career_start_date','grip','biceps','crossbar','shaft','militarypress','hand','press','side']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
         validated_data['password'] = make_password(password)
         return super().create(validated_data)
+
+
+
 
 class ProfileSerializer(serializers.ModelSerializer):
 
@@ -130,4 +139,12 @@ class SupportRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SupportRequest
+        fields = '__all__'
+
+
+
+class TeamPOSTSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Team
         fields = '__all__'

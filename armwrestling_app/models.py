@@ -30,6 +30,22 @@ class CompetitorManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
 
+
+class Team(models.Model):
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=datetime.datetime.now())
+    status = models.CharField(max_length=30,blank=True)
+    organizer = models.ForeignKey('Competitor',on_delete=models.CASCADE,related_name='team_organizer')
+    phone = models.CharField(max_length=30,blank=True)
+    email = models.EmailField(max_length=100,blank=True)
+    country = models.CharField(max_length=100,blank=True)
+    location = models.CharField(max_length=100,blank=True)
+
+    logo = models.ImageField(upload_to='media/teams_logo',blank=True)
+    banner = models.ImageField(upload_to='media/teams_banner',blank=True)
+
+
 class Competitor(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
@@ -53,6 +69,9 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(default='',blank=True,max_length=17)
     birthdate = models.DateField(null=True,blank=True)
     verified = models.BooleanField(default=False,blank=True)
+    
+    team = models.ForeignKey(Team,on_delete=models.CASCADE,related_name='competitor_team',null=True,blank=True)
+    
     objects = CompetitorManager()
 
     # stats
@@ -213,10 +232,3 @@ class SupportRequest(models.Model):
     name = models.CharField(max_length=100)
     datetime = models.DateTimeField(blank=True)
 
-
-class Team(models.Model):
-    name = models.CharField(max_length=120)
-    description = models.TextField()
-    created_at = models.DateTimeField(default=datetime.datetime.now())
-    status = models.CharField(max_length=30)
-    
