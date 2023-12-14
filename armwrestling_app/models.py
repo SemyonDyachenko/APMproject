@@ -223,6 +223,7 @@ class LeagueCompetitor(models.Model):
     league = models.ForeignKey(League,on_delete=models.CASCADE)
     competitor = models.ForeignKey(Competitor,on_delete=models.CASCADE)
     accepted = models.BooleanField(default=False)
+    status = models.CharField(default='sent',max_length=20)
     request_date = models.DateField(blank=True,default='')
 
 

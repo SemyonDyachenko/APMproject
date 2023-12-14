@@ -369,10 +369,13 @@ class LeagueCompetitorAccept(viewsets.ModelViewSet):
     
     def update(self, request, *args, **kwargs):
         competitorId = request.data.get('competitorId')
+        status = request.data.get("status")
         if competitorId is not None:   
             try:
                 competitor = LeagueCompetitor.objects.get(id=competitorId)
-                competitor.accepted = True
+                if status == "accepted":
+                    competitor.accepted = True
+                competitor.status = status
                 competitor.save()
                 serializer = LeagueCompetitorSerializer(competitor)
                 return Response(serializer.data)
@@ -444,6 +447,7 @@ class TournamentUpdateViewSet(viewsets.ModelViewSet):
         name = request.data.get('name')
         afisha = request.data.get('afisha',None)
 
+        
         if tournamentId is not None:   
             try:
                 tournament = Tournament.objects.get(id=tournamentId)
@@ -456,7 +460,9 @@ class TournamentUpdateViewSet(viewsets.ModelViewSet):
                 tournament.level = level
                 tournament.main_referee = main_referee
                 tournament.main_secretary = secretary
-                tournament.afisha = afisha
+               
+                if afisha is not None:
+                    tournament.afisha = afisha
                 tournament.save()
                
                 serializer = TournamentSerializer(tournament)
