@@ -46,6 +46,7 @@ class Team(models.Model):
     banner = models.ImageField(upload_to='media/teams_banner',blank=True)
 
 
+
 class Competitor(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
@@ -93,7 +94,11 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
         return f"{self.first_name} {self.last_name}"
 
 
-
+class TeamCompetitor(models.Model):
+    team = models.ForeignKey(Team,on_delete=models.CASCADE)
+    competitor = models.ForeignKey(Competitor,on_delete=models.CASCADE)
+    datetime = models.DateTimeField(default=datetime.datetime.now())
+    status = models.CharField(max_length=30)
 
 
 
@@ -179,7 +184,6 @@ class TournamentRegistration(models.Model):
     registration_date = models.DateTimeField(auto_now_add=True)
     category = models.CharField(max_length=50,blank=True,default="")
     class Meta:
-        unique_together = (('competitor', 'tournament'),)
         verbose_name_plural = 'Tournament registrations'
 
     def __str__(self):
@@ -232,4 +236,3 @@ class SupportRequest(models.Model):
     email = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     datetime = models.DateTimeField(blank=True)
-

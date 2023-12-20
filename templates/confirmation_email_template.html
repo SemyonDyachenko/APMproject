@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Confirmation</title>
+    <!-- Add your styles here -->
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        width: 100%;
+        min-height: 40px;
+        color: rgb(55 65 81);
+        font-weight: bold;
+      }
+      .link {
+        margin-top: 25px;
+      }
+
+      .link>a {
+        color: rgb(55 65 81);
+        font-weight: 600;
+        background-color: #ffc132;
+        padding-left: 25px;
+        padding-right: 25px;
+        padding-top: 10px;
+        text-decoration:none;
+        padding-bottom: 10px;
+        border-radius: 10px;
+      }
+
+      .underLinks {
+        gap:15px;
+        padding-top:35px;
+        display:flex;
+        justify-between;
+
+      }
+
+      .underLinks>a {
+        color: #ffc132;
+
+      }
+
+      /* Add more styles as needed */
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>ARM-RATE - Подтверждение регистрации</h2>
+      </div>
+      <p>Пожалуйста, перейдите по ссылке для подтверждения профиля:</p>
+      <div class="link">
+        <a href="{{ server_url }}/api/confirm/?token={{ token }}">Подтвердить регистрацию</a>
+      </div>
+
+      <div class="underLinks">
+        <a href="https://apm-league.ru/tournaments">Турниры</a>
+        <a href="https://apm-league.ru/leagues">Лиги</a>
+      </div>
+    </div>
+  </body>
+</html>

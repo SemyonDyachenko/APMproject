@@ -12,7 +12,7 @@ class TeamSerializer(serializers.ModelSerializer):
 class CompetitorSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     kFactor = serializers.IntegerField(read_only=True)
-    team  = TeamSerializer()
+    team  = TeamSerializer(read_only=True)
 
     class Meta:
         model = Competitor
@@ -23,6 +23,19 @@ class CompetitorSerializer(serializers.ModelSerializer):
         validated_data['password'] = make_password(password)
         return super().create(validated_data)
 
+
+class TeamCompetitorPOSTSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeamCompetitor
+        fields = '__all__'
+
+class TeamCompetitorSerializer(serializers.ModelSerializer):
+    competitor = CompetitorSerializer()
+    team = TeamSerializer()
+    
+    class Meta:
+        model = TeamCompetitor
+        fields = '__all__'
 
 
 

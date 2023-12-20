@@ -15,17 +15,22 @@ from django.shortcuts import  get_object_or_404, redirect
 from django.contrib.auth import update_session_auth_hash
 import string
 import secrets 
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
+
 
 def generate_token():
     return secrets.token_urlsafe(30)
 
 def send_confirmation_email(user, token):
     subject = 'Подтверждение регистрации'
-    message = f'Пожалуйста, перейдите по ссылке для подтверждения: http://127.0.0.1:8000/api/confirm/?token={token}'
-    from_email = 'semyondyachenko@gmail.com'  # Замените на ваш адрес электронной почты
+    html_message = render_to_string('confirmation_email_template.html', {'token': token, 'server_url': 'http://127.0.0.1:8000' if settings.DEBUG else 'http://apm-tech.ru'})
+    plain_message = strip_tags(html_message)
+    from_email = 'semyondyachenko@gmail.com'  # Replace with your email address
     to_email = user.email
 
-    send_mail(subject, message, from_email, [to_email])
+    send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
 
 class CompetitorViewSet(viewsets.ModelViewSet):
     queryset = Competitor.objects.filter(verified=True).order_by('-elo_rating')
@@ -80,7 +85,7 @@ class CompetitorConfirmViewSet(viewsets.ModelViewSet):
                 competitor.verified = True
                 competitor.save()
                 # Вернем редирект
-                return Response(status=status.HTTP_302_FOUND, headers={'Location': 'http://localhost:5173/profile'})
+                return Response(status=status.HTTP_302_FOUND, headers={'Location': 'https://apm-league.ru/profile'})
             except Competitor.DoesNotExist:
                 pass
 
@@ -334,6 +339,35 @@ class LeagueUpdateImageViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class TeamUpdateImageViewSet(viewsets.ModelViewSet):
+    queryset = Team.objects.all()
+    serializer_class = TeamPOSTSerializer
+
+    def update(self, request, *args, **kwargs):
+        teamId = request.data.get('teamId')
+        banner = request.data.get('banner',None)
+        logo = request.data.get('logo',None)
+
+        if teamId is not None:   
+            try:
+                team = Team.objects.get(id=teamId)
+                
+                if banner is not None:
+                    team.banner = banner
+                if logo is not None:
+                    team.logo = logo
+                team.save()
+                serializer = TeamPOSTSerializer(team)
+                return Response(serializer.data)
+            except Team.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class LeagueCompetitorsViewSet(viewsets.ModelViewSet):
@@ -865,11 +899,12 @@ class SupportRequestViewSet(viewsets.ModelViewSet):
 
 def send_restore_password_link(user, password):
     subject = 'Восстановление пароля'
-    message = f'Временный пароль для авторизации: {password}. Пожалуйста измените пароль в профиле после успешной авторизации.'
+    html_message = render_to_string('password_restore_template.html', {'password': password, 'server_url': 'http://127.0.0.1:8000' if settings.DEBUG else 'http://apm-tech.ru'})
+    plain_message = strip_tags(html_message)
     from_email = 'semyondyachenko@gmail.com'  # Замените на ваш адрес электронной почты
     to_email = user.email
 
-    send_mail(subject, message, from_email, [to_email])
+    send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
 
 def generate_password(length=8):
     letters = ''.join(secrets.choice(string.ascii_letters) for _ in range(6))
@@ -902,9 +937,57 @@ class PasswordRestoreViewSet(viewsets.ModelViewSet):
                     return Response({'detail': 'Error updating password'}, status=status.HTTP_400_BAD_REQUEST)
                 
 
+class TeamCompetitorViewSet(viewsets.ModelViewSet):
+    serializer_class = TeamCompetitorSerializer
+    queryset = TeamCompetitor.objects.all()
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        competitorId = self.request.query_params.get('competitorId')
+        teamId = self.request.query_params.get('teamId')
+
+        if competitorId is not None:
+            competitor = Competitor.objects.get(id=competitorId)
+            queryset = queryset.filter(competitor=competitor)
+        if teamId is not None:
+            team = Team.objects.get(id=teamId)
+            queryset = queryset.filter(team=team)
+        return queryset
+
+
 class TeamViewSet(viewsets.ModelViewSet):
     serializer_class = TeamSerializer
     queryset = Team.objects.all()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        organizerId = self.request.query_params.get('organizerId')
+
+        if organizerId is not None:
+            organizer = Competitor.objects.get(id=organizerId)
+            queryset = queryset.filter(organizer=organizer)
+        return queryset
+    
+
+    def create(self, request, *args, **kwargs):
+        organizerId = request.data.get('organizerId')
+        name = request.data.get('name')
+
+        if organizerId is not None:   
+            organizer = Competitor.objects.filter(id=organizerId)
+            if organizer.exists():
+                team = Team()
+                organizer_instance = Competitor.objects.get(id=organizerId)
+                team.organizer = organizer_instance 
+                team.name = name
+                team.save()
+                serializer = TeamSerializer(team)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+            
 
     def update(self, request, *args, **kwargs):
         teamId = request.data.get('teamId')
