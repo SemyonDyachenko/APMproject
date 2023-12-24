@@ -48,7 +48,9 @@ router.register(r'createTournamentWeightClasses',TournamentWeightClassesCreateVi
 router.register(r'passwordRestore',PasswordRestoreViewSet,basename='passwordRestore')
 router.register(r'supportRequest',SupportRequestViewSet,basename='supportRequest')
 router.register(r'team',TeamViewSet,basename='team')
-router.register(r'competitorTeams',TeamCompetitorViewSet,)
+router.register(r'competitorTeams',TeamCompetitorViewSet,basename="teamCompetitor")
+router.register(r'teamCompetitorAcceptt',TeamCompetitorAcceptViewSet,basename="teamCompetitorAccept")
+router.register(r'updateCompetitorTeam',UpdateCompetitorTeamViewSet,basename='updateCompetitorTeam')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

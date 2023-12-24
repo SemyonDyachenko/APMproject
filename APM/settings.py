@@ -24,8 +24,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'semyondyachenko@gmail.com'  # Ваш адрес Gmail
-EMAIL_HOST_PASSWORD = 'fbmy colz yfde qobk'  # Ваш пароль от Gmail
+EMAIL_HOST_USER = 'Armwrestling.promotion.machine@gmail.com'  # Ваш адрес Gmail
+EMAIL_HOST_PASSWORD = 'awop tlxi otln oyny'  # Ваш пароль от Gmail
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -38,6 +38,7 @@ DEBUG = True
 
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['*']
+#STATIC_ROOT = os.path.join(BASE_DIR,'static/')
 
 # Application definition
 
@@ -80,6 +81,36 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+'''
+CORS_ALLOWED_ORIGINS =[
+        "https://apm-league.ru"
+]
+
+CORS_ALLOW_METHODS = [
+'DELETE',
+'GET',
+'OPTIONS',
+'PATCH',
+'POST',
+'PUT',
+]
+
+
+CORS_ALLOW_HEADERS = [
+'accept',
+'accept-encoding',
+'authorization',
+'content-type',
+'dnt',
+'origin',
+'user-agent',
+'x-csrftoken',
+'x-requested-with',
+]
+
+'''
+
 
 ROOT_URLCONF = 'APM.urls'
 

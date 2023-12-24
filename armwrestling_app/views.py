@@ -236,6 +236,27 @@ class ProfileViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class UpdateCompetitorTeamViewSet(viewsets.ModelViewSet):
+    serializer_class = CompetitorViewSet
+
+    def update(self, request, *args, **kwargs):
+        competitorId = request.data.get('competitorId')
+        teamId = request.data.get('teamId')
+        if competitorId is not None and teamId is not None:
+            existsCompetitor = Competitor.objects.filter(id=competitorId)
+            existsTeam = Team.objects.filter(id=teamId)
+            if existsCompetitor.exists() and existsTeam.exists():
+                competitor_obj = Competitor.objects.get(id=competitorId)
+                team_obj = Team.objects.get(id=teamId)
+                competitor_obj.team = team_obj
+                competitor_obj.save()
+                serializer = CompetitorSerializer(competitor_obj)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class MatchListViewSet(viewsets.ModelViewSet):
     serializer_class = MatchSerializer
 
@@ -254,8 +275,6 @@ class MatchListViewSet(viewsets.ModelViewSet):
 class LeagueViewSet(viewsets.ModelViewSet):
     queryset = League.objects.all()
     serializer_class = LeagueSerializer
-
-
 
 
 class LeagueDeleteViewSet(viewsets.ModelViewSet):
@@ -938,9 +957,34 @@ class PasswordRestoreViewSet(viewsets.ModelViewSet):
                 
 
 class TeamCompetitorViewSet(viewsets.ModelViewSet):
-    serializer_class = TeamCompetitorSerializer
     queryset = TeamCompetitor.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return TeamCompetitorPOSTSerializer
+        return TeamCompetitorSerializer
     
+    def create(self, request, *args, **kwargs):
+        competitor = request.data.get('competitor')
+        team = request.data.get('team')
+        status = request.data.get('status')
+
+        if competitor is not None and team is not None and status is not None:
+            competitor_obj = Competitor.objects.get(id=competitor)
+            team_obj = Team.objects.get(id=team)
+
+            exists = TeamCompetitor.objects.filter(competitor=competitor_obj,team=team_obj)
+            if not exists.exists():
+                instance = TeamCompetitor()
+                instance.competitor =competitor_obj
+                instance.team = team_obj
+                instance.status = status
+                instance.save()
+                serializer = TeamCompetitorSerializer(instance)
+                return Response(serializer.data)
+        else:
+           return Response({'detail': 'Data is empty'}, status=status.HTTP_400_BAD_REQUEST)
+
     def get_queryset(self):
         queryset = super().get_queryset()
         competitorId = self.request.query_params.get('competitorId')
@@ -954,6 +998,25 @@ class TeamCompetitorViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(team=team)
         return queryset
 
+
+class TeamCompetitorAcceptViewSet(viewsets.ModelViewSet):
+    serializer_class = TeamCompetitorPOSTSerializer
+    queryset = TeamCompetitor.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        competitorId = request.data.get("competitorId")
+        status = request.data.get("status")
+
+        if competitorId is not None:
+            exists = TeamCompetitor.objects.filter(id=competitorId)
+            if exists.exists():
+                competitor_team_obj = TeamCompetitor.objects.get(id=competitorId)
+                competitor_team_obj.status = status
+                competitor_team_obj.save()
+                serializer = TeamCompetitorSerializer()
+                return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 class TeamViewSet(viewsets.ModelViewSet):
     serializer_class = TeamSerializer
