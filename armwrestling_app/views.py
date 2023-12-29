@@ -25,9 +25,9 @@ def generate_token():
 
 def send_confirmation_email(user, token):
     subject = 'Подтверждение регистрации'
-    html_message = render_to_string('confirmation_email_template.html', {'token': token, 'server_url': 'http://127.0.0.1:8000' if settings.DEBUG else 'http://apm-tech.ru'})
+    html_message = render_to_string('confirmation_email_template.html', {'token': token, 'server_url': 'http://localhost:5173' if settings.DEBUG else 'https://apm-league.ru'})
     plain_message = strip_tags(html_message)
-    from_email = 'semyondyachenko@gmail.com'  # Replace with your email address
+    from_email = 'Armwrestling.promotion.machine@gmail.com'  # Replace with your email address
     to_email = user.email
 
     send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
@@ -85,7 +85,7 @@ class CompetitorConfirmViewSet(viewsets.ModelViewSet):
                 competitor.verified = True
                 competitor.save()
                 # Вернем редирект
-                return Response(status=status.HTTP_302_FOUND, headers={'Location': 'https://apm-league.ru/profile'})
+                return Response(status=status.HTTP_302_FOUND, headers={'Location': 'https://apm-league.ru/'})
             except Competitor.DoesNotExist:
                 pass
 
@@ -106,10 +106,14 @@ class PropsUpdateViewSet(viewsets.ModelViewSet):
         weight =  request.data.get('weight',None)
         career_start_date = request.data.get('career_start_date',None)
         description = request.data.get('description',None)
+
         if competitor_id is not None:
             try:
                 competitor = Competitor.objects.get(id=competitor_id)
-                competitor.trainer = Competitor.objects.get(id=trainer)
+                if trainer is not None:
+                    existsTrainer = Competitor.objects.filter(id=trainer)
+                    if existsTrainer.exists():
+                        competitor.trainer = Competitor.objects.get(id=trainer)
                 competitor.birthdate = birthdate
                 competitor.height = height
                 competitor.weight = weight
@@ -920,7 +924,7 @@ def send_restore_password_link(user, password):
     subject = 'Восстановление пароля'
     html_message = render_to_string('password_restore_template.html', {'password': password, 'server_url': 'http://127.0.0.1:8000' if settings.DEBUG else 'http://apm-tech.ru'})
     plain_message = strip_tags(html_message)
-    from_email = 'semyondyachenko@gmail.com'  # Замените на ваш адрес электронной почты
+    from_email = 'Armwrestling.promotion.machine@gmail.com'  # Замените на ваш адрес электронной почты
     to_email = user.email
 
     send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
