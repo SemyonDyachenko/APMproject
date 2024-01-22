@@ -183,11 +183,17 @@ class TournamentRegistration(models.Model):
     weight_class = models.ForeignKey(WeightClass, on_delete=models.CASCADE,default='')
     registration_date = models.DateTimeField(auto_now_add=True)
     category = models.CharField(max_length=50,blank=True,default="")
+    confirm = models.BooleanField(default=False,blank=True)
+    weight = models.FloatField(blank=True,default=0.0)
+    paid = models.BooleanField(blank=True,default=False)
+    hand = models.CharField(blank=True,default='left',max_length=20)
+
     class Meta:
         verbose_name_plural = 'Tournament registrations'
 
     def __str__(self):
         return f'{self.competitor} - {self.tournament} - {self.registration_date}'
+
 
 
 
@@ -229,7 +235,8 @@ class LeagueCompetitor(models.Model):
     accepted = models.BooleanField(default=False)
     status = models.CharField(default='sent',max_length=20)
     request_date = models.DateField(blank=True,default='')
-
+    role = models.CharField(max_length=35,default="competitor")
+    message = models.TextField(blank=True)
 
 class SupportRequest(models.Model):
     message = models.TextField()

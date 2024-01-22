@@ -51,6 +51,8 @@ router.register(r'team',TeamViewSet,basename='team')
 router.register(r'competitorTeams',TeamCompetitorViewSet,basename="teamCompetitor")
 router.register(r'teamCompetitorAcceptt',TeamCompetitorAcceptViewSet,basename="teamCompetitorAccept")
 router.register(r'updateCompetitorTeam',UpdateCompetitorTeamViewSet,basename='updateCompetitorTeam')
+router.register(r'tournament_registration_confirm',TournamentRegistrationConfirmViewSet,basename='registration_confirm')
+router.register(r'tournament_registration_delete',TournamentRegistrationDeleteViewSet,basename='registration_delete')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

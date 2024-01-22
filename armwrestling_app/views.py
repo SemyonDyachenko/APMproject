@@ -724,6 +724,35 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
         model = TournamentRegistration
         fields = '__all__'
 
+    def update(self, request, *args, **kwargs):
+        id = request.data.get('id')
+        weight_class = request.data.get('weight_class')
+        category = request.data.get('category')
+        confirm = request.data.get('confirm')
+        weight = request.data.get('weight')
+        paid = request.data.get('paid')
+        hand = request.data.get('hand')
+        if id is not None:
+            registration = TournamentRegistration.objects.get(id=id)
+            if weight_class is not None:
+                registration.weight_class = WeightClass.objects.get(id=weight_class)
+            if category is not None:
+                registration.category = category
+            if confirm is not None:
+                registration.confirm = confirm
+            if weight is not None:
+                registration.weight = weight
+            if paid is not None:
+                registration.paid = paid
+            if hand is not None:
+                registration.hand = hand
+            registration.save()
+            serializer = TournamentRegistrationSerializer(registration)
+            return Response(serializer.data,status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
     def create(self, request, *args, **kwargs):
         tournament = request.data.get('tournament')
         competitor = request.data.get('competitor')
@@ -768,12 +797,50 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         tournament_id = self.request.query_params.get('tournamentId', None)
+        id = self.request.query_params.get('id',None)
         if tournament_id is not None:
             tournament = Tournament.objects.get(id=tournament_id)
             queryset = queryset.filter(tournament=tournament)
+        elif id is not None:
+            queryset = queryset.filter(id=id)
         else:
             return Response({'error': 'Registered Competitors for this tournament not found.'})
         return queryset
+
+
+class TournamentRegistrationConfirmViewSet(viewsets.ModelViewSet):
+    queryset = TournamentRegistration.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        id = request.data.get('id')
+        if id is not None:
+            exists = TournamentRegistration.objects.filter(id=id)
+            if exists.exists():
+                registration = TournamentRegistration.objects.get(id=id)
+                registration.confirm = True
+                registration.save()
+                serializer = TournamentRegistrationSerializer(registration)
+                return Response(serializer.data)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class TournamentRegistrationDeleteViewSet(viewsets.ModelViewSet):
+    queryset = TournamentRegistration.objects.all()
+    serializer_class =TournamentRegistrationSerializer
+    def destroy(self, request, *args, **kwargs):
+        id = request.query_params.get('id', None)
+        if id is not None:
+            try:
+                registration = TournamentRegistration.objects.get(id=id)
+                registration.delete()
+                return Response({"detail": "League successfully deleted"}, status=status.HTTP_200_OK)
+            except TournamentRegistration.DoesNotExist:
+                return Response({"detail": "League not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"detail": "Id is None"},status=status.HTTP_400_BAD_REQUEST)
+
 
 class TournamentWeightClassesViewSet(viewsets.ModelViewSet):
     queryset = TournamentWeightClasses.objects.all()  

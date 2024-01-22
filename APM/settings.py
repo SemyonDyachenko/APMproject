@@ -27,6 +27,11 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'Armwrestling.promotion.machine@gmail.com'  # Ваш адрес Gmail
 EMAIL_HOST_PASSWORD = 'awop tlxi otln oyny'  # Ваш пароль от Gmail
 
+
+
+# QAUTH
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -34,16 +39,18 @@ EMAIL_HOST_PASSWORD = 'awop tlxi otln oyny'  # Ваш пароль от Gmail
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['*']
-#STATIC_ROOT = os.path.join(BASE_DIR,'static/')
+STATIC_ROOT = os.path.join(BASE_DIR,'static/')
 
 # Application definition
 
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=20),
 }
 
 INSTALLED_APPS = [
@@ -82,7 +89,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-'''
+
 CORS_ALLOWED_ORIGINS =[
         "https://apm-league.ru"
 ]
@@ -109,7 +116,7 @@ CORS_ALLOW_HEADERS = [
 'x-requested-with',
 ]
 
-'''
+
 
 
 ROOT_URLCONF = 'APM.urls'
@@ -141,9 +148,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'apmdb',
-        "USER": "postgres",
+        "USER": "root",
         'HOST': 'localhost',
-        'PASSWORD': '1234',
+        'PASSWORD': 'UnDesCEpTARi',
         'PORT': 5432
     }
 }
@@ -183,7 +190,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+#STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
