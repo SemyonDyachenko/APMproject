@@ -19,13 +19,13 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'Armwrestling.promotion.machine@gmail.com'  # Ваш адрес Gmail
-EMAIL_HOST_PASSWORD = 'awop tlxi otln oyny'  # Ваш пароль от Gmail
+EMAIL_HOST_USER = os.getenv('GMAIL_MAIL') 
+EMAIL_HOST_PASSWORD = os.getenv('GMAIL_PASSWORD')
 
 
 
@@ -39,11 +39,13 @@ EMAIL_HOST_PASSWORD = 'awop tlxi otln oyny'  # Ваш пароль от Gmail
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['*']
-STATIC_ROOT = os.path.join(BASE_DIR,'static/')
+
+if not DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR,'static/')
 
 # Application definition
 
@@ -89,33 +91,31 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS =[
+            "https://apm-league.ru"
+    ]
 
-CORS_ALLOWED_ORIGINS =[
-        "https://apm-league.ru"
-]
+    CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+    ]
 
-CORS_ALLOW_METHODS = [
-'DELETE',
-'GET',
-'OPTIONS',
-'PATCH',
-'POST',
-'PUT',
-]
-
-
-CORS_ALLOW_HEADERS = [
-'accept',
-'accept-encoding',
-'authorization',
-'content-type',
-'dnt',
-'origin',
-'user-agent',
-'x-csrftoken',
-'x-requested-with',
-]
-
+    CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    ]
 
 
 
@@ -148,9 +148,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'apmdb',
-        "USER": "root",
+        "USER": os.getenv('POSTGRES_USER'),
         'HOST': 'localhost',
-        'PASSWORD': 'UnDesCEpTARi',
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
         'PORT': 5432
     }
 }
@@ -190,7 +190,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-#STATIC_URL = 'static/'
+if DEBUG:
+    STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
