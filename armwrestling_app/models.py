@@ -168,10 +168,16 @@ class Match(models.Model):
     winner = models.ForeignKey(Competitor, on_delete=models.CASCADE, related_name='wins', null=True,blank=True)
     first_competitor = models.ForeignKey(Competitor,default=None, on_delete=models.CASCADE,related_name='firstcompetitor')
     second_competitor = models.ForeignKey(Competitor,default=None,on_delete=models.CASCADE,related_name='secondcompetitor')
-
+    category = models.CharField(max_length=50,default='men')
     created_at = models.DateTimeField(default=datetime.datetime.now())
     date = models.DateTimeField(default=datetime.datetime.now())
     hand = models.CharField(max_length=30, blank=True)
+
+    first_competitor_start_rating = models.IntegerField(default=1000)
+    second_competitor_start_rating = models.IntegerField(default=1000)
+
+    first_competitor_result_rating = models.IntegerField(default=1000,blank=True)
+    second_competitor_result_rating = models.IntegerField(default=1000,blank=True)
 
     def __str__(self):
         return f'{self.first_competitor} vs. {self.second_competitor}'
@@ -243,3 +249,9 @@ class SupportRequest(models.Model):
     email = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     datetime = models.DateTimeField(blank=True)
+
+
+class TournamentParams(models.Model):
+    tournament = models.ForeignKey(Tournament,on_delete=models.CASCADE)
+    type = models.CharField(max_length=30,default='default')
+    tables = models.IntegerField(default=1)

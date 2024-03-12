@@ -458,14 +458,97 @@ class LeagueByPresidentViewSet(viewsets.ModelViewSet):
 
 class MatchViewSet(viewsets.ModelViewSet):
     queryset = Match.objects.all()
-    serializer_class = MatchSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return MatchPOSTSerializer
+        return MatchSerializer
+
+    def update(self, request, *args, **kwargs):
+        winnerId = request.data.get('winner')
+        matchId = request.data.get('matchId')
+        first_new_rating = request.data.get('first_new_rating')
+        second_new_rating = request.data.get('second_new_rating')
+
+        if matchId is not None and winnerId is not None:
+            try:
+                match = Match.objects.get(id=matchId)
+                try:
+                    winner = Competitor.objects.get(id=winnerId)
+                    match.winner = winner
+                    match.first_competitor_result_rating = first_new_rating
+                    match.second_competitor_result_rating = second_new_rating
+                    match.save()
+                    serializer = MatchSerializer(match)
+                    
+                    try:
+                        firstCompetitor = Competitor.objects.get(id=match.first_competitor.id)
+                        secondCompetitor = Competitor.objects.get(id=match.second_competitor.id)
+
+                        firstCompetitor.elo_rating = first_new_rating
+                        secondCompetitor.elo_rating = second_new_rating
+                        firstCompetitor.save()
+                        secondCompetitor.save()
+                        return Response(data=serializer.data)
+                    except Competitor.DoesNotExist:
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
+                except Competitor.DoesNotExist:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+            except Match.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST,data={'message': 'match by id not found'})
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST,data={'message': 'match by id not found'})
+                
+
+    def create(self, request, *args, **kwargs):
+        tournamentId = request.data.get('tournament')
+        first_competitorId = request.data.get('first_competitor')
+        second_competitorId = request.data.get('second_competitor')
+        date = request.data.get('date')
+        hand = request.data.get('hand')
+        weight_classId = request.data.get('weight_class')
+        category = request.data.get('category')
+
+        if tournamentId is not None and weight_classId is not None and first_competitorId is not None and second_competitorId is not None:
+            tournament = Tournament.objects.get(id=tournamentId)
+            firstCompetitor = Competitor.objects.get(id=first_competitorId)
+            secondCompetitor = Competitor.objects.get(id=second_competitorId)
+            weightClass = WeightClass.objects.get(id=weight_classId)
+            
+            match = Match()
+            match.tournament = tournament
+            match.first_competitor = firstCompetitor
+            match.second_competitor = secondCompetitor
+            match.first_competitor_start_rating = firstCompetitor.elo_rating
+            match.second_competitor_start_rating = secondCompetitor.elo_rating
+            match.hand = hand
+            match.category = category
+            match.date = date
+            match.weight_class = weightClass
+            match.save()
+            serializer = MatchSerializer(match)
+            return Response(status=status.HTTP_201_CREATED,data=serializer.data)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class TournamentViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
     serializer_class = TournamentSerializer
-    
 
+    @action(detail=False, methods=['post'])
+    def start(self, request):
+        tournamentId = request.data.get('tournamentId')
+        started = request.data.get('started')
+        if tournamentId is not None and started is not None:
+            tournament = Tournament.objects.get(id=tournamentId)
+            tournament.is_started = started
+            tournament.save()
+            serializer = TournamentSerializer(tournament)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
     def get_queryset(self):
         queryset = Tournament.objects.all()
         queryset = queryset.filter()
@@ -482,6 +565,8 @@ class TournamentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(active=active)
             
         return queryset
+    
+
 
 class TournamentUpdateViewSet(viewsets.ModelViewSet):
     queryset = Tournament.objects.all()
@@ -758,6 +843,7 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
         competitor = request.data.get('competitor')
         weight_class = request.data.get('weight_class')
         category = request.data.get('category')
+        hand = request.data.get('hand')
 
         try:
             tournament_obj = Tournament.objects.get(id=tournament)
@@ -773,13 +859,14 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
         except TournamentWeightClasses.DoesNotExist:
             return Response({'error': 'Weight Class does not exist.'},status=status.HTTP_400_BAD_REQUEST)
 
-        if TournamentRegistration.objects.filter(tournament=tournament_obj, competitor=competitor_obj, weight_class=weight_class_obj).exists():
+        if TournamentRegistration.objects.filter(tournament=tournament_obj, competitor=competitor_obj, weight_class=weight_class_obj,hand=hand).exists():
             return Response({'error': 'Tournament registration already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
         existing_registration = TournamentRegistration.objects.filter(
             tournament=tournament_obj,
             competitor=competitor_obj,
-            weight_class=weight_class_obj
+            weight_class=weight_class_obj,
+            hand=hand
         )
 
         if existing_registration.exists():
@@ -790,6 +877,8 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
             registration.competitor = competitor_obj
             registration.category = category
             registration.weight_class = weight_class_obj
+            if hand is not None:
+                registration.hand = hand
             registration.save()
             serializer = TournamentRegistrationSerializer(registration)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1152,3 +1241,9 @@ class TeamViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+
+    
+class TournamentParamsViewSet(viewsets.ModelViewSet):
+    serializer_class = TournamentParamsSerializer
+    queryset = TournamentParams.objects.all()

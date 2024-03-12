@@ -53,6 +53,7 @@ router.register(r'teamCompetitorAcceptt',TeamCompetitorAcceptViewSet,basename="t
 router.register(r'updateCompetitorTeam',UpdateCompetitorTeamViewSet,basename='updateCompetitorTeam')
 router.register(r'tournament_registration_confirm',TournamentRegistrationConfirmViewSet,basename='registration_confirm')
 router.register(r'tournament_registration_delete',TournamentRegistrationDeleteViewSet,basename='registration_delete')
+router.register(r'tournament_params',TournamentParamsViewSet,basename='tournamentParams')
 urlpatterns = [
     path('', include(router.urls)),
     path(r'token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

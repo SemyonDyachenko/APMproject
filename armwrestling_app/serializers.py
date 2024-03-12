@@ -65,9 +65,23 @@ class LeagueCompetitorPOSTSerializer(serializers.ModelSerializer):
         model =LeagueCompetitor
         fields = '__all__'
 
+class WeightClassSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = WeightClass
+        fields = '__all__'
 
 class MatchSerializer(serializers.ModelSerializer):
+    first_competitor = CompetitorSerializer()
+    second_competitor = CompetitorSerializer()
+    weight_class = WeightClassSerializer()
+    class Meta:
+        model = Match
+        fields = '__all__'
 
+
+class MatchPOSTSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Match
         fields = '__all__'
@@ -95,11 +109,7 @@ class TournamentNotificationCreateSerializer(serializers.ModelSerializer):
 
 
 
-class WeightClassSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = WeightClass
-        fields = '__all__'
 
 class TournamentReviewSerializer(serializers.ModelSerializer):
     author = CompetitorSerializer()
@@ -160,4 +170,11 @@ class TeamPOSTSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Team
+        fields = '__all__'
+    
+
+class TournamentParamsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TournamentParams
         fields = '__all__'
