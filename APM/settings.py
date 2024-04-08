@@ -39,7 +39,7 @@ EMAIL_HOST_PASSWORD = os.getenv('GMAIL_PASSWORD')
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['*']

@@ -7,6 +7,7 @@ from django.db.models.signals import post_save
 from django.conf import settings
 from django.core.mail import message,send_mail
 import uuid
+from django.utils import timezone
 
 class WeightClass(models.Model):
     name = models.CharField(max_length=255)
@@ -54,6 +55,7 @@ class Competitor(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=1)
     # weight_class = models.ForeignKey('WeightClass', on_delete=models.CASCADE, related_name='WeightClasses',blank=True)
     elo_rating = models.IntegerField(default=1000)
+    elo_rating_right = models.IntegerField(default=1000,blank=True)
     country = models.CharField(max_length=50,default="Россия")
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -155,7 +157,7 @@ class Tournament(models.Model):
         null=True
     )
 
-    
+    mode = models.CharField(max_length=30,default='manual',blank=True)
 
 
     def __str__(self):
@@ -169,8 +171,8 @@ class Match(models.Model):
     first_competitor = models.ForeignKey(Competitor,default=None, on_delete=models.CASCADE,related_name='firstcompetitor')
     second_competitor = models.ForeignKey(Competitor,default=None,on_delete=models.CASCADE,related_name='secondcompetitor')
     category = models.CharField(max_length=50,default='men')
-    created_at = models.DateTimeField(default=datetime.datetime.now())
-    date = models.DateTimeField(default=datetime.datetime.now())
+    created_at = models.DateTimeField(default=timezone.now)
+    date = models.DateTimeField(default=timezone.now)
     hand = models.CharField(max_length=30, blank=True)
 
     first_competitor_start_rating = models.IntegerField(default=1000)

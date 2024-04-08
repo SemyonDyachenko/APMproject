@@ -485,8 +485,13 @@ class MatchViewSet(viewsets.ModelViewSet):
                         firstCompetitor = Competitor.objects.get(id=match.first_competitor.id)
                         secondCompetitor = Competitor.objects.get(id=match.second_competitor.id)
 
-                        firstCompetitor.elo_rating = first_new_rating
-                        secondCompetitor.elo_rating = second_new_rating
+                        if match.hand == 'left':
+                            firstCompetitor.elo_rating = first_new_rating
+                            secondCompetitor.elo_rating = second_new_rating
+                        else:
+                            firstCompetitor.elo_rating_right = first_new_rating
+                            secondCompetitor.elo_rating_right = second_new_rating
+                        
                         firstCompetitor.save()
                         secondCompetitor.save()
                         return Response(data=serializer.data)
@@ -519,8 +524,8 @@ class MatchViewSet(viewsets.ModelViewSet):
             match.tournament = tournament
             match.first_competitor = firstCompetitor
             match.second_competitor = secondCompetitor
-            match.first_competitor_start_rating = firstCompetitor.elo_rating
-            match.second_competitor_start_rating = secondCompetitor.elo_rating
+            match.first_competitor_start_rating = firstCompetitor.elo_rating if hand == "left" else firstCompetitor.elo_rating_right
+            match.second_competitor_start_rating = secondCompetitor.elo_rating if hand == "left" else secondCompetitor.elo_rating_right
             match.hand = hand
             match.category = category
             match.date = date
@@ -530,6 +535,22 @@ class MatchViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_201_CREATED,data=serializer.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+    def destroy(self, request, *args, **kwargs):
+        id = request.query_params.get('id', None)
+        if id is not None:
+            try:
+                match = Match.objects.get(id=id)
+                match.first_competitor.elo_rating = match.first_competitor_start_rating
+                match.second_competitor.elo_rating = match.second_competitor_start_rating
+                match.first_competitor.save()
+                match.second_competitor.save()
+                match.delete()
+                return Response({"detail": "Match successfully deleted"}, status=status.HTTP_200_OK)
+            except Match.DoesNotExist:
+                return Response({"detail": "Match not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"detail": "Id is None"},status=status.HTTP_400_BAD_REQUEST)
 
 
 class TournamentViewSet(viewsets.ModelViewSet):
@@ -765,13 +786,15 @@ class TournamentProtocolViewSet(viewsets.ModelViewSet):
 
 
     def update(self, request, *args, **kwargs):
-        instance = self.get_object()
         tournament_id = request.data.get('tournamentId',None)
         activated = request.data.get('activated', None)
+        mode = request.data.get('mode',None)
+
         if tournament_id is not None and activated is not None:
             try:
                 tournament = Tournament.objects.get(id=tournament_id)
                 tournament.is_started = activated
+                tournament.mode = mode
                 tournament.save()
                 serializer = TournamentSerializer(tournament)
                 return Response(serializer.data)
@@ -860,7 +883,7 @@ class TournamentRegistrationViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Weight Class does not exist.'},status=status.HTTP_400_BAD_REQUEST)
 
         if TournamentRegistration.objects.filter(tournament=tournament_obj, competitor=competitor_obj, weight_class=weight_class_obj,hand=hand).exists():
-            return Response({'error': 'Tournament registration already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Tournament registration already exists.'}, status=status.HTTP_401_UNAUTHORIZED)
 
         existing_registration = TournamentRegistration.objects.filter(
             tournament=tournament_obj,
