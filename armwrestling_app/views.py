@@ -463,6 +463,28 @@ class MatchViewSet(viewsets.ModelViewSet):
         if self.request.method == 'POST':
             return MatchPOSTSerializer
         return MatchSerializer
+    
+
+    @action(detail=False, methods=['post'])
+    def remove_matches_of_category(self,request):
+        tournamentId = request.data.get('tournamentId')
+        hand = request.data.get('hand')
+        weight_classId = request.data.get('weight_classId')
+        category = request.data.get('category')
+
+        if tournamentId is not None and weight_classId is not None:
+            try:
+                tournament = Tournament.objects.get(id=tournamentId)
+                weightClass = WeightClass.objects.get(id=weight_classId)
+
+                matches = Match.objects.filter(tournament=tournament,hand=hand,weight_class=weightClass,category=category)
+                matches.delete()
+                return Response({"detail": "Match successfully deleted"}, status=status.HTTP_200_OK)
+            except Tournament.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST,data={"message": "not find tournament"})
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST,data={"message": "Not find"})
+        
 
     def update(self, request, *args, **kwargs):
         winnerId = request.data.get('winner')
@@ -513,6 +535,7 @@ class MatchViewSet(viewsets.ModelViewSet):
         hand = request.data.get('hand')
         weight_classId = request.data.get('weight_class')
         category = request.data.get('category')
+        round = request.data.get('round')
 
         if tournamentId is not None and weight_classId is not None and first_competitorId is not None and second_competitorId is not None:
             tournament = Tournament.objects.get(id=tournamentId)
@@ -529,6 +552,10 @@ class MatchViewSet(viewsets.ModelViewSet):
             match.hand = hand
             match.category = category
             match.date = date
+
+            if round is not None:
+                match.round = round
+
             match.weight_class = weightClass
             match.save()
             serializer = MatchSerializer(match)
