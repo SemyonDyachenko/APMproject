@@ -18,7 +18,7 @@ import secrets
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
-
+from django.http import Http404
 
 def generate_token():
     return secrets.token_urlsafe(30)
@@ -272,9 +272,12 @@ class MatchListViewSet(viewsets.ModelViewSet):
             queryset = Match.objects.filter(Q(first_competitor=competitor) | Q(second_competitor=competitor))
             return queryset
         if tournament_id is not None:
-            tournament = Tournament.objects.get(id=tournament_id)
-            queryset = Match.objects.filter(tournament=tournament)
-            return queryset
+            try:
+                tournament = Tournament.objects.get(id=tournament_id)
+                queryset = Match.objects.filter(tournament=tournament)
+                return queryset
+            except Tournament.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST,data={"message": "not found tournament"})
 
 class LeagueViewSet(viewsets.ModelViewSet):
     queryset = League.objects.all()
@@ -397,6 +400,17 @@ class LeagueCompetitorsViewSet(viewsets.ModelViewSet):
     queryset = LeagueCompetitor.objects.all()
     serializer_class = LeagueCompetitorSerializer
 
+     def destroy(self, request, *args, **kwargs):
+        id = request.query_params.get('id', None)
+        if id is not None:
+            try:
+                leagueCompetitor = LeagueCompetitor.objects.get(id=id)
+                leagueCompetitor.delete()
+                return Response({"detail": "Competitor of League successfully deleted"}, status=status.HTTP_200_OK)
+            except Match.DoesNotExist:
+                return Response({"detail": "Competitor not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({"detail": "Id is None"},status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         leagueId = self.request.query_params.get('leagueId',None)
@@ -1241,6 +1255,17 @@ class TeamViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(organizer=organizer)
         return queryset
     
+    def destroy(self,request,*args,**kwargs):
+        id = request.query_params.get('id')
+
+        if id is not None:
+            try:
+                team = Team.object.get(id=id)
+                team.delete()
+            except Team.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
         organizerId = request.data.get('organizerId')
