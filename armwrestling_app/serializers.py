@@ -139,7 +139,7 @@ class TournamentWeightClassesSerializer(serializers.ModelSerializer):
     weight_class = WeightClassSerializer()
     class Meta:
         model = TournamentWeightClasses
-        fields = ['id', 'tournament', 'weight_class','category']
+        fields = ['id', 'tournament', 'weight_class','category','completed_left','completed_right']
 
 class TournamentRegistrationSerializer(serializers.ModelSerializer):
     competitor = CompetitorSerializer()

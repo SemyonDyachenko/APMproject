@@ -1,3 +1,4 @@
+import sys
 from rest_framework import viewsets
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -168,7 +169,9 @@ class StatsUpdateViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+
+
+
 
 class ProfileImageViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
@@ -350,7 +353,8 @@ class LeagueImageDeleteViewSet(viewsets.ModelViewSet):
     serializer_class = LeagueSerializer
     queryset = League.objects.all()
 
-    def update(self, request, *args, **kwargs):
+
+    def create(self, request, *args, **kwargs):
         league_id = request.data.get('id',None)
 
         if league_id is not None:
@@ -576,6 +580,8 @@ class MatchViewSet(viewsets.ModelViewSet):
         category = request.data.get('category')
         round = request.data.get('round')
 
+     
+
         if tournamentId is not None and weight_classId is not None and first_competitorId is not None and second_competitorId is not None:
             tournament = Tournament.objects.get(id=tournamentId)
             firstCompetitor = Competitor.objects.get(id=first_competitorId)
@@ -594,6 +600,15 @@ class MatchViewSet(viewsets.ModelViewSet):
 
             if round is not None:
                 match.round = round
+
+                try:
+                    tournamentCategory = TournamentWeightClasses.objects.get(tournament=tournament,category=category,weight_class=weightClass)
+                    if round != tournamentCategory.roundsCount:
+                        tournamentCategory.roundsCount = round
+                        tournamentCategory.save()
+                except TournamentWeightClasses.DoesNotExist:
+                    print('none class ')
+
 
             match.weight_class = weightClass
             match.save()
@@ -820,7 +835,7 @@ class TournamentWeightClassesCreateViewSet(viewsets.ModelViewSet):
             tournament = Tournament.objects.get(id=tournament_id)
             exist = TournamentWeightClasses.objects.filter(tournament=tournament)
             if exist.exists():
-                exists.delete()
+                exist.delete()
         except Tournament.DoesNotExist:
             return Response({'error': 'Tournament does not exist.'}, status=status.HTTP_404_NOT_FOUND)
         
@@ -1044,6 +1059,25 @@ class TournamentWeightClassesViewSet(viewsets.ModelViewSet):
     class Meta:
         model = TournamentWeightClasses
         fields = '__all__'
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        id = request.data.get('id')
+        completed_left = request.data.get('completed_left')
+        completed_right = request.data.get('completed_right')
+
+        if id is not None:
+            try:
+                weightClass = TournamentWeightClasses.objects.get(id=id)
+                if completed_left is not None:
+                    weightClass.completed_left = completed_left
+                if completed_right is not None:
+                    weightClass.completed_right = completed_right
+                weightClass.save()
+                serializer = TournamentWeightClassesSerializer(weightClass)
+                return Response(status=status.HTTP_200_OK,data=serializer.data)
+            except TournamentWeightClasses.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

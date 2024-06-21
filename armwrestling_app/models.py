@@ -211,6 +211,9 @@ class TournamentWeightClasses(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     weight_class = models.ForeignKey(WeightClass, on_delete=models.CASCADE)
     category = models.CharField(max_length=50,blank=True)
+    completed_left = models.BooleanField(blank=True,default=False)
+    completed_right = models.BooleanField(blank=True,default=False)
+    roundsCount = models.IntegerField(blank=True,default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Review(models.Model):
