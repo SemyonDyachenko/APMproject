@@ -353,6 +353,7 @@ class LeagueImageDeleteViewSet(viewsets.ModelViewSet):
     serializer_class = LeagueSerializer
     queryset = League.objects.all()
 
+
     def create(self, request, *args, **kwargs):
         league_id = request.data.get('id',None)
 
