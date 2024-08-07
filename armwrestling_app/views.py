@@ -578,7 +578,7 @@ class MatchViewSet(viewsets.ModelViewSet):
         weight_classId = request.data.get('weight_class')
         category = request.data.get('category')
         round = request.data.get('round')
-
+        grid = request.data.get('grid')
      
 
         if tournamentId is not None and weight_classId is not None and first_competitorId is not None and second_competitorId is not None:
@@ -596,6 +596,9 @@ class MatchViewSet(viewsets.ModelViewSet):
             match.hand = hand
             match.category = category
             match.date = date
+
+            if grid is not None:
+                match.grid = grid
 
             if round is not None:
                 match.round = round

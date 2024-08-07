@@ -176,6 +176,7 @@ class Match(models.Model):
     hand = models.CharField(max_length=30, blank=True)
 
     round = models.IntegerField(blank=True,default=0)
+    grid = models.CharField(blank=True,default="upper",max_length=20)
 
     first_competitor_start_rating = models.IntegerField(default=1000)
     second_competitor_start_rating = models.IntegerField(default=1000)
